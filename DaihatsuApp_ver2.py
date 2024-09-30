@@ -8,6 +8,7 @@ import os
 import csv
 import shutil
 import json
+from excel_export import PlotExporter
 class DaihatsuApp_ver2(tk.Tk):
     def __init__(self):
         super().__init__()
@@ -15,7 +16,7 @@ class DaihatsuApp_ver2(tk.Tk):
         # Set window properties
         self.title("DAIHATSU DIESEL MFG.CO.,LTD")
         self.geometry("600x800")
-        self.resizable(True, True)
+        self.resizable(False, False)
         # Gọi hàm setup_frame1
         # Register validation command
         self.validate_command = self.register(self.validate_number)
@@ -28,6 +29,7 @@ class DaihatsuApp_ver2(tk.Tk):
         self.load_csv()
 
         self.columns_csv = None
+        
         
 
         # Ngôn ngữ mặc định là English
@@ -69,7 +71,8 @@ class DaihatsuApp_ver2(tk.Tk):
         # Tạo Combobox
         self.combobox = ttk.Combobox(self.frame2, textvariable=self.search_var, width=30)
         self.combobox.grid(row=0, column=1, padx=0, pady=0)
-        self.combobox['values']  = []  # Gán danh sách cột ban đầu
+       # Gán danh sách cột từ self.columns_csv vào Combobox
+        self.combobox['values'] = [] # Sử dụng danh sách từ self.columns_csv
 
         # Tạo Button Add
         self.add_button = tk.Button(self.frame2, text=translations["English"]["btn_add"], command=self.add_column)
@@ -122,14 +125,6 @@ class DaihatsuApp_ver2(tk.Tk):
 
         # Bind sự kiện chọn dòng trong Treeview
         self.tree2.bind("<<TreeviewSelect>>", self.on_tree2_select)
-
-        # Tạo Label và Entry cho "Limit for Graph"
-        self.limit_label = tk.Label(self.frame4A, text="Limit for Graph")
-        self.limit_label.grid(row=1, column=0, padx=(5, 2), pady=5, sticky="e")
-        self.limit_var = tk.StringVar(value="1200")  # Giá trị mặc định là 1200
-        self.limit_entry = tk.Entry(self.frame4A, textvariable=self.limit_var, width=10, 
-                                     validate='key', validatecommand=(self.validate_command, '%P'))
-        self.limit_entry.grid(row=1, column=1, padx=(2, 5), pady=5, sticky="w")
 
         # Tạo Label và Entry cho "Upper Limit"
         self.Upper_limit_label = tk.Label(self.frame4A, text="Upper Limit")
@@ -265,20 +260,21 @@ class DaihatsuApp_ver2(tk.Tk):
         return columns
     def browse_folder(self):
             # Mở hộp thoại để chọn thư mục
-            folder_selected = filedialog.askdirectory()
+            self.folder_selected = filedialog.askdirectory()
             
-            if folder_selected:
+            if self.folder_selected:
                 # Hiển thị thư mục đã chọn
-                messagebox.showinfo("Add Success", f"Path: {folder_selected}")
+                messagebox.showinfo("Add Success", f"Path: {self.folder_selected}")
                 self.path_entry.delete(0, tk.END)  # Xóa nội dung cũ
-                self.path_entry.insert(0, folder_selected)  # Chèn đường dẫn mới vào Entry
+                self.path_entry.insert(0, self.folder_selected)  # Chèn đường dẫn mới vào Entry
                 self.check_path()  # Kiểm tra đường dẫn ngay sau khi chọn
             else:
                 messagebox.showwarning("No Folder Selected", "Please select a folder.")
 
              ###pick csv file and get the columns !
-            csv_file_path = self.get_first_csv_file(folder_selected)
+            csv_file_path = self.get_first_csv_file(self.folder_selected)
             self.columns_csv = self.read_csv_columns(csv_file_path)
+            
     def check_path(self):
         path = self.path_entry.get()
         if os.path.exists(path):
@@ -290,6 +286,7 @@ class DaihatsuApp_ver2(tk.Tk):
         if color == "green":
             self.status_light.create_oval(2, 2, 18, 18, fill="green")  # Đèn xanh
             self.path_entry.config(state="disabled")
+            
 
         else:
             self.status_light.create_oval(2, 2, 18, 18, fill="red")  # Đèn đỏ
@@ -303,7 +300,7 @@ class DaihatsuApp_ver2(tk.Tk):
             upper_limit = self.tree2.item(item, "values")[2]  # Lấy Upper Limit
             
             # Lấy giá trị graph_limit từ Entry
-            graph_limit = self.limit_entry.get()  # Lấy giá trị Graph Limit từ Entry
+            #graph_limit = self.limit_entry.get()  # Lấy giá trị Graph Limit từ Entry
             
             # Lấy Expan Number từ tree3 thay vì từ Entry
             expan_number = None
@@ -319,7 +316,7 @@ class DaihatsuApp_ver2(tk.Tk):
                 'column_name': name,
                 'upper_limit': int(upper_limit),
                 'lower_limit': int(lower_limit),
-                'graph_limit': int(graph_limit),
+                #'graph_limit': int(graph_limit),
                 'expan_number': float(expan_number)
             }
             
@@ -336,6 +333,10 @@ class DaihatsuApp_ver2(tk.Tk):
             json.dump(columns_info, json_file, indent=4)
 
         print("Data saved to columns_info.json")
+        input_directory = self.folder_selected
+        plot_exporter = PlotExporter(input_directory)
+        plot_exporter.process_files()
+        plot_exporter.finalize_excel()
     def add_column(self):
         column_name = self.search_var.get().strip()  # Lấy tên cột từ ô tìm kiếm
         if column_name and column_name in self.columns_csv:  # Kiểm tra xem có tên cột nào được nhập và có trong mảng
