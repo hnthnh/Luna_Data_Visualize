@@ -28,7 +28,6 @@ class DaihatsuApp_ver2(tk.Tk):
 
         # Ngôn ngữ mặc định là English
         self.current_language = "English"
-
     def setup_frame1(self):
         self.frame1 = tk.Frame(self, borderwidth=2, relief="flat", padx=10, pady=10)
         self.frame1.grid(row=0, column=0, padx=5, pady=5, sticky="nsew")
@@ -40,14 +39,18 @@ class DaihatsuApp_ver2(tk.Tk):
         self.logo_label = tk.Label(self.frame1, image=self.logo)
         self.logo_label.grid(row=0, column=0)
 
-        self.browse_folder_button = tk.Button(self.frame1, text=translations["English"]["btn_browseFolder"], command=self.browse_folder)
+        self.browse_folder_button = tk.Button(self.frame1, text="Browse Folder", command=self.browse_folder)
         self.browse_folder_button.grid(row=1, column=0, padx=2, pady=2)
 
+        # Nhập đường dẫn
+        self.path_entry = tk.Entry(self.frame1,width=70)
+        self.path_entry.grid(row=1, column=1, columnspan=2, padx=5, pady=5, sticky="ew")
 
-        self.progress = ttk.Progressbar(self.frame1, orient="horizontal", length=300, mode="determinate")
-        self.progress.grid(row=1, column=1, columnspan=2, padx=20, pady=10, sticky="ew")
-
+        self.status_light = tk.Canvas(self.frame1, width=20, height=20)
+        self.status_light.grid(row=1, column=3, padx=5, pady=5)
+        self.update_status_light("red")  # Mặc định là màu đỏ
         
+
     def setup_frame2(self):
         self.frame2 = tk.Frame(self, borderwidth=2, relief="raised", padx=10, pady=10)
         self.frame2.grid(row=1, column=0, padx=2, pady=2, sticky="nsew")
@@ -86,14 +89,9 @@ class DaihatsuApp_ver2(tk.Tk):
 
         # Danh sách để lưu các tên cột đã thêm
         self.column_names = []
-
-
     def setup_frame3(self):
         self.frame3 = tk.Frame(self, borderwidth=2, relief="raised", padx=10, pady=10)
         self.frame3.grid(row=2, column=0, padx=5, pady=5, sticky="nsew")
-
-        
-
     def setup_frame4(self):
         # Khung chính của frame4
         self.frame4 = tk.Frame(self, borderwidth=2, relief="raised", padx=10, pady=10)
@@ -149,8 +147,7 @@ class DaihatsuApp_ver2(tk.Tk):
         # Cấu hình cho layout giãn nở theo kích thước cửa sổ
         self.frame4.grid_columnconfigure(0, weight=1)
         self.frame4.grid_columnconfigure(1, weight=1)
-        self.frame4.grid_rowconfigure(0, weight=1)
-    
+        self.frame4.grid_rowconfigure(0, weight=1)   
     def setup_frame5(self):
         self.frame5 = tk.Frame(self, borderwidth=2, relief="raised", padx=10, pady=10)
         self.frame5.grid(row=4, column=0, padx=5, pady=5, sticky="nsew")
@@ -159,28 +156,38 @@ class DaihatsuApp_ver2(tk.Tk):
         self.expan_label = tk.Label(self.frame5, text="Expansion Number")
         self.expan_label.grid(row=0, column=0, padx=5, pady=5, sticky="w")
 
-        self.expan_var = tk.StringVar(value="O")  # Mặc định là "O"
+        self.expan_var = tk.StringVar(value="X")  # Mặc định là "O"
         expan_option = ttk.Combobox(self.frame5, textvariable=self.expan_var, values=["O", "X"], state="readonly", width=5)
         expan_option.grid(row=0, column=1, padx=5, pady=5, sticky="e")
         expan_option.bind("<<ComboboxSelected>>", self.update_editable_state)  # Khi chọn sẽ cập nhật trạng thái khóa/mở
-
-        # Treeview cho bảng Name và Mul
-        self.tree3 = ttk.Treeview(self.frame5, columns=("Name", "Mul"), show="headings", height=5)
+        
+        # Treeview cho bảng Name và Expan_Number
+        self.tree3 = ttk.Treeview(self.frame5, columns=("Name", "Expan_Number"), show="headings", height=5)
         self.tree3.heading("Name", text="Name")
-        self.tree3.heading("Mul", text="Mul")
-        self.tree3.grid(row=1, column=0, columnspan=2, padx=5, pady=5, sticky="nsew")
+        self.tree3.heading("Expan_Number", text="Expan Number")
+        self.tree3.grid(row=1, column=0, columnspan=2, padx=40, pady=5, sticky="nsew")
 
         # Điều chỉnh kích thước cột
         self.tree3.column("Name", width=150)
-        self.tree3.column("Mul", width=70)
+        self.tree3.column("Expan_Number", width=70)
 
-        # Thêm dữ liệu từ Frame 2 vào cột Name
+        # Tạo Label và Entry cho "Expan Number"
+        self.Expan_Number_label = tk.Label(self.frame5, text="Expan Number")
+        self.Expan_Number_label.grid(row=1, column=2, padx=(5, 2), pady=5, sticky="e")
+        self.Expan_Number_var = tk.StringVar(value="1")
+        self.Expan_Number_entry = tk.Entry(self.frame5, textvariable=self.Expan_Number_var, width=10)
+        self.Expan_Number_entry.grid(row=1, column=3, padx=(2, 5), pady=5, sticky="w")
+
+        # Bind Enter event to update the selected row
+        self.Expan_Number_entry.bind('<Return>', self.update_selected_row_f5)
+        # Thêm dữ liệu từ Frame 2 vào cột Name, giá trị mặc định của Expan_Number là 1
         for item in self.tree.get_children():
             name = self.tree.item(item, "values")[1]  # Lấy giá trị từ cột Name ở Frame 2
-            self.tree3.insert("", "end", values=(name, 0))  # Thêm vào cột Name, cột Mul mặc định là 0
+            self.tree3.insert("", "end", values=(name, "1"))  # Giá trị mặc định của cột Expan_Number là 1
 
-        # Gọi hàm để set trạng thái ban đầu của cột Mul (khóa hoặc mở)
+        # Gọi hàm để set trạng thái ban đầu của cột Expan_Number (khóa hoặc mở)
         self.update_editable_state()
+
 
     def setup_frame6(self):
         self.frame6 = tk.Frame(self, borderwidth=2, relief="raised", padx=10, pady=10)
@@ -248,20 +255,37 @@ class DaihatsuApp_ver2(tk.Tk):
 
         return columns
     def browse_folder(self):
-        # Mở hộp thoại để chọn thư mục
-        folder_selected = filedialog.askdirectory()
-        
-        if folder_selected:
-            # Hiển thị thư mục đã chọn
-            messagebox.showwarning("Add Success ",f"Path:{folder_selected}")
+            # Mở hộp thoại để chọn thư mục
+            folder_selected = filedialog.askdirectory()
+            
+            if folder_selected:
+                # Hiển thị thư mục đã chọn
+                messagebox.showinfo("Add Success", f"Path: {folder_selected}")
+                self.path_entry.delete(0, tk.END)  # Xóa nội dung cũ
+                self.path_entry.insert(0, folder_selected)  # Chèn đường dẫn mới vào Entry
+                self.check_path()  # Kiểm tra đường dẫn ngay sau khi chọn
+            else:
+                messagebox.showwarning("No Folder Selected", "Please select a folder.")
+
+             ###pick csv file and get the columns !
+            csv_file_path = self.get_first_csv_file(folder_selected)
+            self.columns_csv = self.read_csv_columns(csv_file_path)
+    def check_path(self):
+        path = self.path_entry.get()
+        if os.path.exists(path):
+            self.update_status_light("green")  # Đường dẫn tồn tại, màu xanh
         else:
-            messagebox.showwarning("No Folder Selected", "Please select a folder.")
-        
-        ###pick csv file and get the columns !
-        csv_file_path = self.get_first_csv_file(folder_selected)
-        self.columns_csv = self.read_csv_columns(csv_file_path)
+            self.update_status_light("red")  # Đường dẫn không tồn tại, màu đỏ
+    def update_status_light(self, color):
+        self.status_light.delete("all")  # Xóa mọi thứ trong Canvas
+        if color == "green":
+            self.status_light.create_oval(2, 2, 18, 18, fill="green")  # Đèn xanh
+            self.path_entry.config(state="disabled")
 
-
+        else:
+            self.status_light.create_oval(2, 2, 18, 18, fill="red")  # Đèn đỏ
+    def start_action(self):
+        pass
     def add_column(self):
         column_name = self.search_var.get().strip()  # Lấy tên cột từ ô tìm kiếm
         if column_name and column_name in self.columns_csv:  # Kiểm tra xem có tên cột nào được nhập và có trong mảng
@@ -315,56 +339,23 @@ class DaihatsuApp_ver2(tk.Tk):
         # Nút để xác nhận sửa đổi
         tk.Button(edit_window, text="OK", command=lambda: self.save_changes(selected_item, lower_limit_var.get(), upper_limit_var.get(), edit_window)).grid(row=2, columnspan=2)
     def update_editable_state(self, event=None):
-    # Kiểm tra giá trị của combobox expan_var, nếu là "O" thì có thể chỉnh sửa, nếu là "X" thì khóa
-        is_editable = self.expan_var.get() == "O"
-        
-        if is_editable:
-            self.tree3.bind("<Double-1>", self.on_double_click_mul)  # Cho phép nhấp đúp để chỉnh sửa
+        # Kiểm tra lựa chọn "O" hay "X"
+        if self.expan_var.get() == "X":
+            # Khóa Entry khi chọn "X" và đặt lại tất cả các cột "Expan_Number" về 1
+            self.Expan_Number_entry.config(state="disabled")
+            for item in self.tree3.get_children():
+                current_values = self.tree3.item(item, "values")
+                # Đặt lại giá trị cột "Expan_Number" về 1
+                self.tree3.item(item, values=(current_values[0], "1"))
         else:
-            self.tree3.unbind("<Double-1>")  # Khóa chỉnh sửa nếu chọn "X"
-
-    def on_double_click_mul(self, event):
-        # Xác định hàng đang được chọn
-        selected_item = self.tree3.selection()
-        if not selected_item:
-            return
-        selected_item = selected_item[0]  # Lấy item đầu tiên nếu có nhiều lựa chọn
-
-        # Lấy vị trí cột được nhấp
-        col = self.tree3.identify_column(event.x)
-        if col == "#2":  # Chỉ xử lý nếu là cột Mul
-            self.edit_mul_value(selected_item)
-
-    def edit_mul_value(self, item):
-        # Lấy giá trị hiện tại của cột Mul
-        current_value = self.tree3.item(item, "values")[1]  # Cột thứ 2 là Mul
-
-        # Tạo Entry box để chỉnh sửa
-        entry = tk.Entry(self.tree3, width=5)
-        entry.insert(0, current_value)  # Đặt giá trị hiện tại vào Entry
-        entry.select_range(0, tk.END)  # Chọn toàn bộ văn bản
-
-        # Hiển thị Entry box tại vị trí của cột Mul
-        self.tree3.set(item, column="Mul", value="")  # Tạm thời xóa giá trị hiển thị của cột Mul
-        entry.grid(row=self.tree3.index(item), column=1)  # Hiển thị Entry box
-
-        # Ràng buộc sự kiện Enter để lưu giá trị khi nhấn Enter
-        entry.bind("<Return>", lambda event: self.save_mul_value(item, entry.get()))
-
-    def save_mul_value(self, item, new_value):
-        # Lưu giá trị mới cho cột Mul
-        self.tree3.set(item, column="Mul", value=new_value)
-    def start_action(self):
-        pass
-    def add_item(self):
-        pass
+            # Mở khóa Entry khi chọn "O"
+            self.Expan_Number_entry.config(state="normal")
     def update_combobox(self,*args):
         search_text = self.search_var.get().lower()
         # Lọc các cột chứa từ khóa tìm kiếm
         filtered_columns = [col for col in self.columns_csv if search_text in col.lower()]
         # Cập nhật danh sách trong Combobox
         self.combobox['values'] = filtered_columns
-
     def update_language(self, selected_language):
         # Cập nhật ngôn ngữ hiện tại
         self.current_language = selected_language
@@ -379,7 +370,6 @@ class DaihatsuApp_ver2(tk.Tk):
 
         self.limit_label.config(text=translations[self.current_language]["label_GraphLimit"])
         self.expan_label.config(text=translations[self.current_language]["label_ExpanNumber"])
-
     def load_csv(self):
         temp_dir='temp'
         if not os.path.exists(temp_dir):
@@ -412,7 +402,6 @@ class DaihatsuApp_ver2(tk.Tk):
                 messagebox.showerror("Lỗi", f"Đã xảy ra lỗi: {e}")
         else:
             messagebox.showwarning("Cảnh báo", "Không tìm thấy tệp CSV trong thư mục tạm.")
-
     def destroy_temp(self):
         directory_path = 'temp'
         if os.path.exists(directory_path):
@@ -421,8 +410,7 @@ class DaihatsuApp_ver2(tk.Tk):
             except Exception as e:
                 print(f"An error occurred: {e}")  # In ra thông báo lỗi nếu có
         else:
-            print("Directory does not exist.")  # Thông báo nếu thư mục không tồn tại
-                    
+            print("Directory does not exist.")  # Thông báo nếu thư mục không tồn tại                 
     # Hàm để update dữ liệu từ frame 2 xuống frame 4 (chỉ lấy tên)
     def update_frame4_table(self):
         # Xóa các hàng hiện tại trong table frame4 trước khi update
@@ -450,11 +438,10 @@ class DaihatsuApp_ver2(tk.Tk):
             column_name = values[1]  # Giả sử cột tên ở vị trí thứ 2
 
             # Thêm tên cột vào treeview của frame4, với Mul = 0
-            self.tree3.insert("", "end", values=(column_name, 0))
+            self.tree3.insert("", "end", values=(column_name, 1))
 
         # Bind sự kiện click vào tree2 để xử lý khi người dùng chọn hàng
         #self.tree2.bind("<<TreeviewSelect>>", self.on_tree2_select)
-
     def on_tree2_select(self, event):
         # Lấy hàng được chọn
         selected_item = self.tree2.selection()
@@ -465,7 +452,6 @@ class DaihatsuApp_ver2(tk.Tk):
             # Cập nhật Entry với giá trị Min và Max của hàng đã chọn
             self.lower_limit_var.set(values[1])  # Giá trị Lower Limit
             self.Upperlimit_var.set(values[2])   # Giá trị Upper Limit
-
     def update_selected_row(self, event):
         # Lấy hàng được chọn
         selected_item = self.tree2.selection()
@@ -478,4 +464,14 @@ class DaihatsuApp_ver2(tk.Tk):
 
             # Cập nhật giá trị trong Treeview
             self.tree2.item(item, values=(self.tree2.item(item, "values")[0], new_min, new_max))
-
+    def update_selected_row_f5(self, event):
+        # Lấy dòng đang được chọn
+        selected_item = self.tree3.focus()
+        
+        if selected_item:
+            # Lấy giá trị cột "Name" hiện tại
+            current_values = self.tree3.item(selected_item, "values")
+            
+            # Cập nhật lại giá trị cột "Expan_Number" với giá trị từ Entry Expan_Number
+            new_expan_value = self.Expan_Number_var.get()
+            self.tree3.item(selected_item, values=(current_values[0], new_expan_value))
