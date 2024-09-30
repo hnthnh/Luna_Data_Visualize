@@ -7,6 +7,7 @@ import zipfile
 import os
 import csv
 import shutil
+import json
 class DaihatsuApp_ver2(tk.Tk):
     def __init__(self):
         super().__init__()
@@ -16,6 +17,8 @@ class DaihatsuApp_ver2(tk.Tk):
         self.geometry("600x800")
         self.resizable(True, True)
         # Gọi hàm setup_frame1
+        # Register validation command
+        self.validate_command = self.register(self.validate_number)
         self.setup_frame1()
         self.setup_frame2()
         self.setup_frame3()
@@ -23,6 +26,7 @@ class DaihatsuApp_ver2(tk.Tk):
         self.setup_frame5()
         self.setup_frame6()
         self.load_csv()
+
         self.columns_csv = None
         
 
@@ -123,21 +127,24 @@ class DaihatsuApp_ver2(tk.Tk):
         self.limit_label = tk.Label(self.frame4A, text="Limit for Graph")
         self.limit_label.grid(row=1, column=0, padx=(5, 2), pady=5, sticky="e")
         self.limit_var = tk.StringVar(value="1200")  # Giá trị mặc định là 1200
-        limit_entry = tk.Entry(self.frame4A, textvariable=self.limit_var, width=10)
-        limit_entry.grid(row=1, column=1, padx=(2, 5), pady=5, sticky="w")
+        self.limit_entry = tk.Entry(self.frame4A, textvariable=self.limit_var, width=10, 
+                                     validate='key', validatecommand=(self.validate_command, '%P'))
+        self.limit_entry.grid(row=1, column=1, padx=(2, 5), pady=5, sticky="w")
 
         # Tạo Label và Entry cho "Upper Limit"
         self.Upper_limit_label = tk.Label(self.frame4A, text="Upper Limit")
         self.Upper_limit_label.grid(row=2, column=0, padx=(5, 2), pady=5, sticky="e")
         self.Upperlimit_var = tk.StringVar(value="2000")
-        self.Upperlimit_entry = tk.Entry(self.frame4A, textvariable=self.Upperlimit_var, width=10)
+        self.Upperlimit_entry = tk.Entry(self.frame4A, textvariable=self.Upperlimit_var, width=10, 
+                                          validate='key', validatecommand=(self.validate_command, '%P'))
         self.Upperlimit_entry.grid(row=2, column=1, padx=(2, 5), pady=5, sticky="w")
 
         # Tạo Label và Entry cho "Lower limit"
         self.lower_limit_label = tk.Label(self.frame4A, text="Lower limit")
         self.lower_limit_label.grid(row=3, column=0, padx=(5, 2), pady=5, sticky="e")
         self.lower_limit_var = tk.StringVar(value="0")
-        self.lower_limit_entry = tk.Entry(self.frame4A, textvariable=self.lower_limit_var, width=10)
+        self.lower_limit_entry = tk.Entry(self.frame4A, textvariable=self.lower_limit_var, width=10, 
+                                           validate='key', validatecommand=(self.validate_command, '%P'))
         self.lower_limit_entry.grid(row=3, column=1, padx=(2, 5), pady=5, sticky="w")
 
         # Bind sự kiện Enter cho các Entry
@@ -147,48 +154,50 @@ class DaihatsuApp_ver2(tk.Tk):
         # Cấu hình cho layout giãn nở theo kích thước cửa sổ
         self.frame4.grid_columnconfigure(0, weight=1)
         self.frame4.grid_columnconfigure(1, weight=1)
-        self.frame4.grid_rowconfigure(0, weight=1)   
+        self.frame4.grid_rowconfigure(0, weight=1)
     def setup_frame5(self):
-        self.frame5 = tk.Frame(self, borderwidth=2, relief="raised", padx=10, pady=10)
-        self.frame5.grid(row=4, column=0, padx=5, pady=5, sticky="nsew")
+            self.frame5 = tk.Frame(self, borderwidth=2, relief="raised", padx=10, pady=10)
+            self.frame5.grid(row=4, column=0, padx=5, pady=5, sticky="nsew")
 
-        # Label và Combobox để chọn "O" hoặc "X"
-        self.expan_label = tk.Label(self.frame5, text="Expansion Number")
-        self.expan_label.grid(row=0, column=0, padx=5, pady=5, sticky="w")
+            # Label và Combobox để chọn "O" hoặc "X"
+            self.expan_label = tk.Label(self.frame5, text="Expansion Number")
+            self.expan_label.grid(row=0, column=0, padx=5, pady=5, sticky="w")
 
-        self.expan_var = tk.StringVar(value="X")  # Mặc định là "O"
-        expan_option = ttk.Combobox(self.frame5, textvariable=self.expan_var, values=["O", "X"], state="readonly", width=5)
-        expan_option.grid(row=0, column=1, padx=5, pady=5, sticky="e")
-        expan_option.bind("<<ComboboxSelected>>", self.update_editable_state)  # Khi chọn sẽ cập nhật trạng thái khóa/mở
-        
-        # Treeview cho bảng Name và Expan_Number
-        self.tree3 = ttk.Treeview(self.frame5, columns=("Name", "Expan_Number"), show="headings", height=5)
-        self.tree3.heading("Name", text="Name")
-        self.tree3.heading("Expan_Number", text="Expan Number")
-        self.tree3.grid(row=1, column=0, columnspan=2, padx=40, pady=5, sticky="nsew")
+            self.expan_var = tk.StringVar(value="X")  # Mặc định là "X"
+            expan_option = ttk.Combobox(self.frame5, textvariable=self.expan_var, values=["O", "X"], state="readonly", width=5)
+            expan_option.grid(row=0, column=1, padx=5, pady=5, sticky="e")
+            expan_option.bind("<<ComboboxSelected>>", self.update_editable_state)  # Khi chọn sẽ cập nhật trạng thái khóa/mở
+            
+            # Treeview cho bảng Name và Expan_Number
+            self.tree3 = ttk.Treeview(self.frame5, columns=("Name", "Expan_Number"), show="headings", height=5)
+            self.tree3.heading("Name", text="Name")
+            self.tree3.heading("Expan_Number", text="Expan Number")
+            self.tree3.grid(row=1, column=0, columnspan=2, padx=40, pady=5, sticky="nsew")
 
-        # Điều chỉnh kích thước cột
-        self.tree3.column("Name", width=150)
-        self.tree3.column("Expan_Number", width=70)
+            # Điều chỉnh kích thước cột
+            self.tree3.column("Name", width=150)
+            self.tree3.column("Expan_Number", width=70)
 
-        # Tạo Label và Entry cho "Expan Number"
-        self.Expan_Number_label = tk.Label(self.frame5, text="Expan Number")
-        self.Expan_Number_label.grid(row=1, column=2, padx=(5, 2), pady=5, sticky="e")
-        self.Expan_Number_var = tk.StringVar(value="1")
-        self.Expan_Number_entry = tk.Entry(self.frame5, textvariable=self.Expan_Number_var, width=10)
-        self.Expan_Number_entry.grid(row=1, column=3, padx=(2, 5), pady=5, sticky="w")
+            # Tạo Label và Entry cho "Expan Number"
+            self.Expan_Number_label = tk.Label(self.frame5, text="Expan Number")
+            self.Expan_Number_label.grid(row=1, column=2, padx=(5, 2), pady=5, sticky="e")
+            self.Expan_Number_var = tk.StringVar(value="1")
+            
+            # Thêm ràng buộc cho Entry chỉ cho phép nhập số
+            self.Expan_Number_entry = tk.Entry(self.frame5, textvariable=self.Expan_Number_var, width=10, 
+                                                validate='key', validatecommand=(self.validate_command, '%P'))
+            self.Expan_Number_entry.grid(row=1, column=3, padx=(2, 5), pady=5, sticky="w")
 
-        # Bind Enter event to update the selected row
-        self.Expan_Number_entry.bind('<Return>', self.update_selected_row_f5)
-        # Thêm dữ liệu từ Frame 2 vào cột Name, giá trị mặc định của Expan_Number là 1
-        for item in self.tree.get_children():
-            name = self.tree.item(item, "values")[1]  # Lấy giá trị từ cột Name ở Frame 2
-            self.tree3.insert("", "end", values=(name, "1"))  # Giá trị mặc định của cột Expan_Number là 1
+            # Bind Enter event to update the selected row
+            self.Expan_Number_entry.bind('<Return>', self.update_selected_row_f5)
+            
+            # Thêm dữ liệu từ Frame 2 vào cột Name, giá trị mặc định của Expan_Number là 1
+            for item in self.tree.get_children():
+                name = self.tree.item(item, "values")[1]  # Lấy giá trị từ cột Name ở Frame 2
+                self.tree3.insert("", "end", values=(name, "1"))  # Giá trị mặc định của cột Expan_Number là 1
 
-        # Gọi hàm để set trạng thái ban đầu của cột Expan_Number (khóa hoặc mở)
-        self.update_editable_state()
-
-
+            # Gọi hàm để set trạng thái ban đầu của cột Expan_Number (khóa hoặc mở)
+            self.update_editable_state()
     def setup_frame6(self):
         self.frame6 = tk.Frame(self, borderwidth=2, relief="raised", padx=10, pady=10)
         self.frame6.grid(row=5, column=0, padx=5, pady=5, sticky="nsew")
@@ -285,7 +294,48 @@ class DaihatsuApp_ver2(tk.Tk):
         else:
             self.status_light.create_oval(2, 2, 18, 18, fill="red")  # Đèn đỏ
     def start_action(self):
-        pass
+        columns_info = []
+        
+        # Lấy giá trị từ Treeview cho thông tin cột
+        for item in self.tree2.get_children():  # tree2 chứa thông tin Name, Lower, Upper Limits
+            name = self.tree2.item(item, "values")[0]  # Lấy tên cột từ Treeview
+            lower_limit = self.tree2.item(item, "values")[1]  # Lấy Lower Limit
+            upper_limit = self.tree2.item(item, "values")[2]  # Lấy Upper Limit
+            
+            # Lấy giá trị graph_limit từ Entry
+            graph_limit = self.limit_entry.get()  # Lấy giá trị Graph Limit từ Entry
+            
+            # Lấy Expan Number từ tree3 thay vì từ Entry
+            expan_number = None
+            for item3 in self.tree3.get_children():
+                if self.tree3.item(item3, "values")[0] == name:
+                    expan_number = self.tree3.item(item3, "values")[1]  # Lấy giá trị Expan Number từ Treeview thứ hai
+            
+            if expan_number is None:
+                expan_number = 1  # Giá trị mặc định nếu không tìm thấy trong tree3
+
+            # Thêm thông tin vào danh sách
+            column_info = {
+                'column_name': name,
+                'upper_limit': int(upper_limit),
+                'lower_limit': int(lower_limit),
+                'graph_limit': int(graph_limit),
+                'expan_number': float(expan_number)
+            }
+            
+            columns_info.append(column_info)
+
+        # Lưu vào file JSON
+        json_file_path = "columns_info.json"
+        if os.path.exists(json_file_path):
+            os.remove(json_file_path)  # Xóa file nếu nó đã tồn tại
+            print(f"{json_file_path} already exists and has been deleted.")
+
+        # Ghi lại dữ liệu vào file JSON
+        with open(json_file_path, "w") as json_file:
+            json.dump(columns_info, json_file, indent=4)
+
+        print("Data saved to columns_info.json")
     def add_column(self):
         column_name = self.search_var.get().strip()  # Lấy tên cột từ ô tìm kiếm
         if column_name and column_name in self.columns_csv:  # Kiểm tra xem có tên cột nào được nhập và có trong mảng
@@ -411,7 +461,6 @@ class DaihatsuApp_ver2(tk.Tk):
                 print(f"An error occurred: {e}")  # In ra thông báo lỗi nếu có
         else:
             print("Directory does not exist.")  # Thông báo nếu thư mục không tồn tại                 
-    # Hàm để update dữ liệu từ frame 2 xuống frame 4 (chỉ lấy tên)
     def update_frame4_table(self):
         # Xóa các hàng hiện tại trong table frame4 trước khi update
         for item in self.tree2.get_children():
@@ -465,6 +514,7 @@ class DaihatsuApp_ver2(tk.Tk):
             # Cập nhật giá trị trong Treeview
             self.tree2.item(item, values=(self.tree2.item(item, "values")[0], new_min, new_max))
     def update_selected_row_f5(self, event):
+
         # Lấy dòng đang được chọn
         selected_item = self.tree3.focus()
         
@@ -475,3 +525,11 @@ class DaihatsuApp_ver2(tk.Tk):
             # Cập nhật lại giá trị cột "Expan_Number" với giá trị từ Entry Expan_Number
             new_expan_value = self.Expan_Number_var.get()
             self.tree3.item(selected_item, values=(current_values[0], new_expan_value))
+
+    def validate_number(self, value):
+            """Kiểm tra xem giá trị có phải là số hợp lệ hay không."""
+            if value == "" or value.isdigit() or (value[0] == '-' and value[1:].isdigit()):
+                return True
+            else:
+                messagebox.showerror("Invalid input", "Please enter a valid number.")
+                return False

@@ -1,0 +1,16 @@
+[
+    {
+        "column_name": "Engine Speed",
+        "upper_limit": 2000,
+        "lower_limit": 0,
+        "graph_limit": 1200,
+        "expan_number": 1.0
+    },
+    {
+        "column_name": "LEL Detector",
+        "upper_limit": 2000,
+        "lower_limit": 0,
+        "graph_limit": 1200,
+        "expan_number": 1.0
+    }
+]
