@@ -8,13 +8,13 @@ import os
 import csv
 import shutil
 import json
-from excel_export import PlotExporter
+from plot_exporter import process_csv_to_excel
 class DaihatsuApp_ver2(tk.Tk):
     def __init__(self):
         super().__init__()
        # self.destroy_temp()
         # Set window properties
-        self.title("DAIHATSU DIESEL MFG.CO.,LTD")
+        self.title("DAIHATSU DIESEL MFG.CO.,LTD | Ver 0.0.1 Beta ")
         self.geometry("600x800")
         self.resizable(False, False)
         # Gọi hàm setup_frame1
@@ -203,15 +203,12 @@ class DaihatsuApp_ver2(tk.Tk):
         # OptionMenu cho chọn ngôn ngữ
         language_options = ["English", "Japanese"]
         language_menu = tk.OptionMenu(self.frame6, self.language_var, *language_options, command=self.update_language)
-        language_menu.grid(row=0, column=0, padx=5, pady=5, sticky="e")
+        language_menu.grid(row=0, column=0, padx=5, pady=5, sticky="w")
 
-        # Label hiển thị version ở góc trái
-        self.version_label = tk.Label(self.frame6, text="Version 1.0", font=("Arial", 10))
-        self.version_label.grid(row=0, column=1, padx=5, pady=5, sticky="w")
 
         # Button START ở góc phải
-        self.start_button = tk.Button(self.frame6, text="START", font=("Arial", 12, "bold"), command=self.start_action)
-        self.start_button.grid(row=0, column=2, padx=5, pady=5, sticky="e")
+        self.start_button = tk.Button(self.frame6, text="START",highlightcolor="green", font=("Arial", 15, "bold"),borderwidth=5,width=30, command=self.start_action)
+        self.start_button.grid(row=0, column=2, padx=5, pady=5, sticky="ew")
 
         # Đặt kích thước cột
         self.frame6.grid_columnconfigure(0, weight=1)  # Cột 0 sẽ mở rộng
@@ -333,10 +330,22 @@ class DaihatsuApp_ver2(tk.Tk):
             json.dump(columns_info, json_file, indent=4)
 
         print("Data saved to columns_info.json")
-        input_directory = self.folder_selected
-        plot_exporter = PlotExporter(input_directory)
-        plot_exporter.process_files()
-        plot_exporter.finalize_excel()
+        #self.output_directory = filedialog.askdirectory(title="Select Output Directory")
+        self.output_excel = filedialog.asksaveasfilename(
+            title="Save Excel File",
+            defaultextension=".xlsx",
+            filetypes=[("Excel files", "*.xlsx")]
+        )
+        # Định nghĩa các tham số
+        directory = self.folder_selected  # Thay đổi đường dẫn đến thư mục chứa tệp CSV
+        json_file = json_file_path  # Thay đổi đường dẫn đến tệp JSON
+        output_excel_prefix = 'plots'
+        final_excel = self.output_excel
+        batch_size = 50
+       
+
+        # Gọi hàm
+        process_csv_to_excel(directory, json_file, final_excel, output_excel_prefix, batch_size)
     def add_column(self):
         column_name = self.search_var.get().strip()  # Lấy tên cột từ ô tìm kiếm
         if column_name and column_name in self.columns_csv:  # Kiểm tra xem có tên cột nào được nhập và có trong mảng
@@ -526,7 +535,6 @@ class DaihatsuApp_ver2(tk.Tk):
             # Cập nhật lại giá trị cột "Expan_Number" với giá trị từ Entry Expan_Number
             new_expan_value = self.Expan_Number_var.get()
             self.tree3.item(selected_item, values=(current_values[0], new_expan_value))
-
     def validate_number(self, value):
             """Kiểm tra xem giá trị có phải là số hợp lệ hay không."""
             if value == "" or value.isdigit() or (value[0] == '-' and value[1:].isdigit()):

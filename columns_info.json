@@ -1,8 +1,1 @@
-[
-    {
-        "column_name": "Engine Speed",
-        "upper_limit": 2000,
-        "lower_limit": 0,
-        "expan_number": 1.0
-    }
-]
+[]
