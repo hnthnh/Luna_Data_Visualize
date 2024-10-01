@@ -217,25 +217,6 @@ class DaihatsuApp_ver2(tk.Tk):
 
     #############################
     
-    def browse_zip(self):
-        # Mở hộp thoại để chọn tệp ZIP
-        zip_file_path = filedialog.askopenfilename(title="Chọn tệp ZIP", filetypes=[("ZIP files", "*.zip")])
-        temp_dir = 'temp'
-        if not os.path.exists(temp_dir):
-            os.makedirs(temp_dir)
-        if zip_file_path:
-            try:
-                # Giải nén tệp ZIP vào thư mục tạm
-                with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
-                    zip_ref.extractall(temp_dir)
-                self.load_csv(self)
-                 # Cập nhật lại Combobox sau khi có dữ liệu
-                self.combobox['values'] = self.columns_csv
-                messagebox.showinfo("Thông báo", "Giải nén thành công vào thư mục 'temp'!")
-            except zipfile.BadZipFile:
-                messagebox.showerror("Lỗi", "Tệp đã chọn không phải là tệp ZIP hợp lệ.")
-            except Exception as e:
-                messagebox.showerror("Lỗi", f"Đã xảy ra lỗi: {e}")
     def get_first_csv_file(self,folder_path):
         csv_files = [f for f in os.listdir(folder_path) if f.endswith('.csv')]
         
@@ -261,7 +242,6 @@ class DaihatsuApp_ver2(tk.Tk):
             
             if self.folder_selected:
                 # Hiển thị thư mục đã chọn
-                messagebox.showinfo("Add Success", f"Path: {self.folder_selected}")
                 self.path_entry.delete(0, tk.END)  # Xóa nội dung cũ
                 self.path_entry.insert(0, self.folder_selected)  # Chèn đường dẫn mới vào Entry
                 self.check_path()  # Kiểm tra đường dẫn ngay sau khi chọn
@@ -274,10 +254,10 @@ class DaihatsuApp_ver2(tk.Tk):
             
     def check_path(self):
         path = self.path_entry.get()
-        if os.path.exists(path):
-            self.update_status_light("green")  # Đường dẫn tồn tại, màu xanh
+        if os.path.exists(path) and any(f.endswith('.csv') for f in os.listdir(path)):
+            self.update_status_light("green")  # Đường dẫn tồn tại và có file CSV, màu xanh
         else:
-            self.update_status_light("red")  # Đường dẫn không tồn tại, màu đỏ
+            self.update_status_light("red")  # Đường dẫn không tồn tại hoặc không có file CSV, màu đỏ
     def update_status_light(self, color):
         self.status_light.delete("all")  # Xóa mọi thứ trong Canvas
         if color == "green":
@@ -461,7 +441,7 @@ class DaihatsuApp_ver2(tk.Tk):
             except Exception as e:
                 messagebox.showerror("Lỗi", f"Đã xảy ra lỗi: {e}")
         else:
-            messagebox.showwarning("Cảnh báo", "Không tìm thấy tệp CSV trong thư mục tạm.")
+            pass
     def destroy_temp(self):
         directory_path = 'temp'
         if os.path.exists(directory_path):
