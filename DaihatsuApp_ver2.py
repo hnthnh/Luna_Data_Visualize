@@ -15,7 +15,22 @@ class DaihatsuApp_ver2(tk.Tk):
        # self.destroy_temp()
         # Set window properties
         self.title("DAIHATSU DIESEL MFG.CO.,LTD | Ver 0.0.1 Beta ")
-        self.geometry("600x800")
+        self.iconbitmap("assets\h_logo.ico")
+        window_width = 540
+        window_height = 800
+        self.geometry(f"{window_width}x{window_height}")
+        self.resizable(False, False)
+
+        # Get screen width and height
+        screen_width = self.winfo_screenwidth()
+        screen_height = self.winfo_screenheight()
+
+        # Calculate position x, y
+        position_x = int((screen_width / 2) - (window_width / 2))
+        position_y = int(((screen_height+70) / 2) - ((window_height+70) / 2))
+
+        # Set the window position
+        self.geometry(f"{window_width}x{window_height}+{position_x}+{position_y}")
         self.resizable(False, False)
         # Gọi hàm setup_frame1
         # Register validation command
@@ -33,7 +48,7 @@ class DaihatsuApp_ver2(tk.Tk):
         
 
         # Ngôn ngữ mặc định là English
-        self.current_language = "English"
+        self.current_language = "Japanese"
     def setup_frame1(self):
         self.frame1 = tk.Frame(self, borderwidth=2, relief="flat", padx=10, pady=10)
         self.frame1.grid(row=0, column=0, padx=5, pady=5, sticky="nsew")
@@ -45,11 +60,11 @@ class DaihatsuApp_ver2(tk.Tk):
         self.logo_label = tk.Label(self.frame1, image=self.logo)
         self.logo_label.grid(row=0, column=0)
 
-        self.browse_folder_button = tk.Button(self.frame1, text="Browse Folder", command=self.browse_folder)
+        self.browse_folder_button = ttk.Button(self.frame1, text=translations["Japanese"]["btn_browseFolder"], command=self.browse_folder)
         self.browse_folder_button.grid(row=1, column=0, padx=2, pady=2)
 
         # Nhập đường dẫn
-        self.path_entry = tk.Entry(self.frame1,width=70)
+        self.path_entry = tk.Entry(self.frame1,width=50)
         self.path_entry.grid(row=1, column=1, columnspan=2, padx=5, pady=5, sticky="ew")
 
         self.status_light = tk.Canvas(self.frame1, width=20, height=20)
@@ -61,7 +76,7 @@ class DaihatsuApp_ver2(tk.Tk):
         self.frame2 = tk.Frame(self, borderwidth=2, relief="raised", padx=10, pady=10)
         self.frame2.grid(row=1, column=0, padx=2, pady=2, sticky="nsew")
 
-        self.search_label = tk.Label(self.frame2, text=translations["English"]["search_label"])
+        self.search_label = tk.Label(self.frame2, text=translations["Japanese"]["label_GraphItem"])
         self.search_label.grid(row=0, column=0)
 
         # Trong hàm khởi tạo hoặc nơi bạn tạo các widget:
@@ -69,27 +84,27 @@ class DaihatsuApp_ver2(tk.Tk):
         self.search_var.trace("w", self.update_combobox)  # Theo dõi sự thay đổi giá trị của search_var
 
         # Tạo Combobox
-        self.combobox = ttk.Combobox(self.frame2, textvariable=self.search_var, width=30)
+        self.combobox = ttk.Combobox(self.frame2, textvariable=self.search_var, width=20)
         self.combobox.grid(row=0, column=1, padx=0, pady=0)
        # Gán danh sách cột từ self.columns_csv vào Combobox
         self.combobox['values'] = [] # Sử dụng danh sách từ self.columns_csv
 
         # Tạo Button Add
-        self.add_button = tk.Button(self.frame2, text=translations["English"]["btn_add"], command=self.add_column)
-        self.add_button.grid(row=0, column=2, padx=2, pady=2,sticky='w')
+        self.add_button = ttk.Button(self.frame2, text=translations["Japanese"]["btn_add"], command=self.add_column)
+        self.add_button.grid(row=0, column=2)
         # Nút Delete
-        delete_button = ttk.Button(self.frame2, text="Delete", command=self.delete_selected)
-        delete_button.grid(row=0, column=2, padx=2, pady=2,sticky='e')
+        self.delete_button = ttk.Button(self.frame2, text=translations["Japanese"]["btn_delete"], command=self.delete_selected)
+        self.delete_button.grid(row=0, column=3)
 
         # Tạo Table (Treeview)
         self.tree = ttk.Treeview(self.frame2, columns=("ID", "Name"), show="headings", height=5)
         self.tree.heading("ID", text="ID")
-        self.tree.heading("Name", text="Name")
+        self.tree.heading("Name", text=translations["Japanese"]["tree_name"])
         self.tree.grid(row=1, column=0, columnspan=3, padx=5, pady=5, sticky="nsew")
 
         # Đặt kích thước cho cột
         self.tree.column("ID", width=100)
-        self.tree.column("Name", width=350)
+        self.tree.column("Name", width=200)
 
         # Kích thước của frame
         self.frame2.grid_rowconfigure(1, weight=1)
@@ -113,9 +128,9 @@ class DaihatsuApp_ver2(tk.Tk):
 
         # Treeview cho bảng Name, Min, Max
         self.tree2 = ttk.Treeview(self.frame4B, columns=("Name", "Min", "Max"), show="headings", height=5)
-        self.tree2.heading("Name", text="Name")
-        self.tree2.heading("Min", text="Lower Limit")
-        self.tree2.heading("Max", text="Upper Limit")
+        self.tree2.heading("Name", text=translations["Japanese"]["tree_name"])
+        self.tree2.heading("Min", text=translations["Japanese"]["label_LowerLimit"])
+        self.tree2.heading("Max", text=translations["Japanese"]["label_UpperLimit"])
         self.tree2.grid(row=1, column=0, columnspan=3, padx=5, pady=5, sticky="nsew")
 
         # Điều chỉnh kích thước cột
@@ -127,7 +142,7 @@ class DaihatsuApp_ver2(tk.Tk):
         self.tree2.bind("<<TreeviewSelect>>", self.on_tree2_select)
 
         # Tạo Label và Entry cho "Upper Limit"
-        self.Upper_limit_label = tk.Label(self.frame4A, text="Upper Limit")
+        self.Upper_limit_label = tk.Label(self.frame4A, text=translations["Japanese"]["label_UpperLimit"])
         self.Upper_limit_label.grid(row=2, column=0, padx=(5, 2), pady=5, sticky="e")
         self.Upperlimit_var = tk.StringVar(value="2000")
         self.Upperlimit_entry = tk.Entry(self.frame4A, textvariable=self.Upperlimit_var, width=10, 
@@ -135,7 +150,7 @@ class DaihatsuApp_ver2(tk.Tk):
         self.Upperlimit_entry.grid(row=2, column=1, padx=(2, 5), pady=5, sticky="w")
 
         # Tạo Label và Entry cho "Lower limit"
-        self.lower_limit_label = tk.Label(self.frame4A, text="Lower limit")
+        self.lower_limit_label = tk.Label(self.frame4A, text=translations["Japanese"]["label_LowerLimit"])
         self.lower_limit_label.grid(row=3, column=0, padx=(5, 2), pady=5, sticky="e")
         self.lower_limit_var = tk.StringVar(value="0")
         self.lower_limit_entry = tk.Entry(self.frame4A, textvariable=self.lower_limit_var, width=10, 
@@ -155,7 +170,7 @@ class DaihatsuApp_ver2(tk.Tk):
             self.frame5.grid(row=4, column=0, padx=5, pady=5, sticky="nsew")
 
             # Label và Combobox để chọn "O" hoặc "X"
-            self.expan_label = tk.Label(self.frame5, text="Expansion Number")
+            self.expan_label = tk.Label(self.frame5, text=translations["Japanese"]["label_ExpanNumber"])
             self.expan_label.grid(row=0, column=0, padx=5, pady=5, sticky="w")
 
             self.expan_var = tk.StringVar(value="X")  # Mặc định là "X"
@@ -165,8 +180,8 @@ class DaihatsuApp_ver2(tk.Tk):
             
             # Treeview cho bảng Name và Expan_Number
             self.tree3 = ttk.Treeview(self.frame5, columns=("Name", "Expan_Number"), show="headings", height=5)
-            self.tree3.heading("Name", text="Name")
-            self.tree3.heading("Expan_Number", text="Expan Number")
+            self.tree3.heading("Name",  text=translations["Japanese"]["tree_name"])
+            self.tree3.heading("Expan_Number", text=translations["Japanese"]["label_Expan"])
             self.tree3.grid(row=1, column=0, columnspan=2, padx=40, pady=5, sticky="nsew")
 
             # Điều chỉnh kích thước cột
@@ -174,7 +189,7 @@ class DaihatsuApp_ver2(tk.Tk):
             self.tree3.column("Expan_Number", width=70)
 
             # Tạo Label và Entry cho "Expan Number"
-            self.Expan_Number_label = tk.Label(self.frame5, text="Expan Number")
+            self.Expan_Number_label = tk.Label(self.frame5, text=translations["Japanese"]["label_Expan"])
             self.Expan_Number_label.grid(row=1, column=2, padx=(5, 2), pady=5, sticky="e")
             self.Expan_Number_var = tk.StringVar(value="1")
             
@@ -198,16 +213,16 @@ class DaihatsuApp_ver2(tk.Tk):
         self.frame6.grid(row=5, column=0, padx=5, pady=5, sticky="nsew")
 
         # Biến để lưu lựa chọn ngôn ngữ
-        self.language_var = tk.StringVar(value="English")
+        self.language_var = tk.StringVar(value="Japanese")
 
         # OptionMenu cho chọn ngôn ngữ
-        language_options = ["English", "Japanese"]
+        language_options = [ "Japanese","English"]
         language_menu = tk.OptionMenu(self.frame6, self.language_var, *language_options, command=self.update_language)
         language_menu.grid(row=0, column=0, padx=5, pady=5, sticky="w")
 
 
         # Button START ở góc phải
-        self.start_button = tk.Button(self.frame6, text="START",highlightcolor="green", font=("Arial", 15, "bold"),borderwidth=5,width=30, command=self.start_action)
+        self.start_button = tk.Button(self.frame6, text=translations["Japanese"]["btn_start"], font=("Arial", 15, "bold"),borderwidth=5,width=20, command=self.start_action)
         self.start_button.grid(row=0, column=2, padx=5, pady=5, sticky="ew")
 
         # Đặt kích thước cột
@@ -377,7 +392,7 @@ class DaihatsuApp_ver2(tk.Tk):
         upper_limit_entry.grid(row=1, column=1)
 
         # Nút để xác nhận sửa đổi
-        tk.Button(edit_window, text="OK", command=lambda: self.save_changes(selected_item, lower_limit_var.get(), upper_limit_var.get(), edit_window)).grid(row=2, columnspan=2)
+        ttk.Button(edit_window, text="OK", command=lambda: self.save_changes(selected_item, lower_limit_var.get(), upper_limit_var.get(), edit_window)).grid(row=2, columnspan=2)
     def update_editable_state(self, event=None):
         # Kiểm tra lựa chọn "O" hay "X"
         if self.expan_var.get() == "X":
@@ -401,15 +416,24 @@ class DaihatsuApp_ver2(tk.Tk):
         self.current_language = selected_language
 
         # Cập nhật văn bản cho các thành phần giao diện
+        self.browse_folder_button.config(text=translations[self.current_language]["btn_browseFolder"])
 
         self.start_button.config(text=translations[self.current_language]["btn_start"])
-        self.version_label.config(text=translations[self.current_language]["label_version"])
-        self.search_button.config(text=translations[self.current_language]["btn_search"])
-        self.browse_button_zip.config(text=translations[self.current_language]["btn_browseZIP"])
-        self.browse_button_folder.config(text=translations[self.current_language]["btn_browseFolder"])
+        self.add_button.config(text=translations[self.current_language]["btn_add"])
+        self.delete_button.config(text=translations[self.current_language]["btn_delete"])
 
-        self.limit_label.config(text=translations[self.current_language]["label_GraphLimit"])
+        self.search_label.config(text=translations[self.current_language]["label_GraphItem"])
+        self.Upper_limit_label.config(text=translations[self.current_language]["label_UpperLimit"])
+        self.lower_limit_label.config(text=translations[self.current_language]["label_LowerLimit"])
+
         self.expan_label.config(text=translations[self.current_language]["label_ExpanNumber"])
+        self.Expan_Number_label.config(text=translations[self.current_language]["label_Expan"])
+        self.tree.heading("Name", text=translations[self.current_language]["tree_name"])
+        self.tree2.heading("Name", text=translations[self.current_language]["tree_name"])
+        self.tree2.heading("Min", text=translations[self.current_language]["label_LowerLimit"])
+        self.tree2.heading("Max", text=translations[self.current_language]["label_UpperLimit"])
+        self.tree3.heading("Name", text=translations[self.current_language]["tree_name"])
+        self.tree3.heading("Expan_Number", text=translations[self.current_language]["label_Expan"])
     def load_csv(self):
         temp_dir='temp'
         if not os.path.exists(temp_dir):
