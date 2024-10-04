@@ -1,14 +1,36 @@
-import tkinter as tk
-from tkinter import ttk, filedialog, messagebox
-from PIL import Image as PILimg
-from PIL import ImageTk as PILImageTk
-from language import translations
-import zipfile
 import os
+import sys
+import json
 import csv
 import shutil
-import json
-from plot_exporter import process_csv_to_excel
+import threading
+import time
+import gc
+import re
+import io
+import subprocess
+
+import numpy as np
+import pandas as pd
+import matplotlib
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+import seaborn as sns
+import imageio
+import tkinter as tk
+
+
+from PIL import Image as PILimg
+from PIL import ImageTk as PILImageTk
+from openpyxl import Workbook, load_workbook
+from openpyxl.drawing.image import Image
+from openpyxl.styles import Alignment
+from openpyxl.utils import get_column_letter
+from tkinter import ttk, filedialog, messagebox
+from language import translations
+# Đặt chế độ sử dụng cho matplotlib
+matplotlib.use('Agg')
+lock = threading.Lock()
 class DaihatsuApp_ver2(tk.Tk):
     def __init__(self):
         super().__init__()
@@ -20,15 +42,12 @@ class DaihatsuApp_ver2(tk.Tk):
         window_height = 800
         self.geometry(f"{window_width}x{window_height}")
         self.resizable(False, False)
-
         # Get screen width and height
         screen_width = self.winfo_screenwidth()
         screen_height = self.winfo_screenheight()
-
         # Calculate position x, y
         position_x = int((screen_width / 2) - (window_width / 2))
         position_y = int(((screen_height+70) / 2) - ((window_height+70) / 2))
-
         # Set the window position
         self.geometry(f"{window_width}x{window_height}+{position_x}+{position_y}")
         self.resizable(False, False)
@@ -42,13 +61,11 @@ class DaihatsuApp_ver2(tk.Tk):
         self.setup_frame5()
         self.setup_frame6()
         self.load_csv()
-
+        
         self.columns_csv = None
-        
-        
-
         # Ngôn ngữ mặc định là English
         self.current_language = "Japanese"
+          
     def setup_frame1(self):
         self.frame1 = tk.Frame(self, borderwidth=2, relief="flat", padx=10, pady=10)
         self.frame1.grid(row=0, column=0, padx=5, pady=5, sticky="nsew")
@@ -70,8 +87,6 @@ class DaihatsuApp_ver2(tk.Tk):
         self.status_light = tk.Canvas(self.frame1, width=20, height=20)
         self.status_light.grid(row=1, column=3, padx=5, pady=5)
         self.update_status_light("red")  # Mặc định là màu đỏ
-        
-
     def setup_frame2(self):
         self.frame2 = tk.Frame(self, borderwidth=2, relief="raised", padx=10, pady=10)
         self.frame2.grid(row=1, column=0, padx=2, pady=2, sticky="nsew")
@@ -229,9 +244,7 @@ class DaihatsuApp_ver2(tk.Tk):
         self.frame6.grid_columnconfigure(0, weight=1)  # Cột 0 sẽ mở rộng
         self.frame6.grid_columnconfigure(1, weight=0)  # Cột 1 sẽ không mở rộng
         self.frame6.grid_columnconfigure(2, weight=0)  # Cột 2 sẽ không mở rộng
-
     #############################
-    
     def get_first_csv_file(self,folder_path):
         csv_files = [f for f in os.listdir(folder_path) if f.endswith('.csv')]
         
@@ -265,8 +278,7 @@ class DaihatsuApp_ver2(tk.Tk):
 
              ###pick csv file and get the columns !
             csv_file_path = self.get_first_csv_file(self.folder_selected)
-            self.columns_csv = self.read_csv_columns(csv_file_path)
-            
+            self.columns_csv = self.read_csv_columns(csv_file_path)        
     def check_path(self):
         path = self.path_entry.get()
         if os.path.exists(path) and any(f.endswith('.csv') for f in os.listdir(path)):
@@ -284,6 +296,7 @@ class DaihatsuApp_ver2(tk.Tk):
             self.status_light.create_oval(2, 2, 18, 18, fill="red")  # Đèn đỏ
     def start_action(self):
         columns_info = []
+
         
         # Lấy giá trị từ Treeview cho thông tin cột
         for item in self.tree2.get_children():  # tree2 chứa thông tin Name, Lower, Upper Limits
@@ -318,13 +331,13 @@ class DaihatsuApp_ver2(tk.Tk):
         json_file_path = "columns_info.json"
         if os.path.exists(json_file_path):
             os.remove(json_file_path)  # Xóa file nếu nó đã tồn tại
-            print(f"{json_file_path} already exists and has been deleted.")
+            #(f"{json_file_path} already exists and has been deleted.")
 
         # Ghi lại dữ liệu vào file JSON
         with open(json_file_path, "w") as json_file:
             json.dump(columns_info, json_file, indent=4)
 
-        print("Data saved to columns_info.json")
+        #print("Data saved to columns_info.json")
         #self.output_directory = filedialog.askdirectory(title="Select Output Directory")
         self.output_excel = filedialog.asksaveasfilename(
             title="Save Excel File",
@@ -337,10 +350,9 @@ class DaihatsuApp_ver2(tk.Tk):
         output_excel_prefix = 'plots'
         final_excel = self.output_excel
         batch_size = 50
-       
-
-        # Gọi hàm
-        process_csv_to_excel(directory, json_file, final_excel, output_excel_prefix, batch_size)
+        thread = threading.Thread(target=self.process_csv_to_excel, args=(directory, json_file, final_excel, output_excel_prefix, batch_size))
+        thread.start()
+        #self.process_csv_to_excel(directory, json_file, final_excel, output_excel_prefix, batch_size)
     def add_column(self):
         column_name = self.search_var.get().strip()  # Lấy tên cột từ ô tìm kiếm
         if column_name and column_name in self.columns_csv:  # Kiểm tra xem có tên cột nào được nhập và có trong mảng
@@ -356,7 +368,7 @@ class DaihatsuApp_ver2(tk.Tk):
                 self.update_frame4_table()
                 self.update_frame5_table()
             else:
-                messagebox.showinfo("Thông báo", "Tên cột đã tồn tại trong danh sách.")
+                messagebox.showwarning("Cảnh báo","Tên cột đã tồn tại trong danh sách.")
         else:
             messagebox.showwarning("Cảnh báo", "Tên cột không hợp lệ hoặc không có trong danh sách.")
     def delete_selected(self):
@@ -472,9 +484,11 @@ class DaihatsuApp_ver2(tk.Tk):
             try:
                 shutil.rmtree(directory_path)  # Xóa thư mục và tất cả nội dung bên trong
             except Exception as e:
-                print(f"An error occurred: {e}")  # In ra thông báo lỗi nếu có
+                pass
+                #print(f"An error occurred: {e}")  # In ra thông báo lỗi nếu có
         else:
-            print("Directory does not exist.")  # Thông báo nếu thư mục không tồn tại                 
+            pass
+            #print("Directory does not exist.")  # Thông báo nếu thư mục không tồn tại                 
     def update_frame4_table(self):
         # Xóa các hàng hiện tại trong table frame4 trước khi update
         for item in self.tree2.get_children():
@@ -546,3 +560,224 @@ class DaihatsuApp_ver2(tk.Tk):
             else:
                 messagebox.showerror("Invalid input", "Please enter a valid number.")
                 return False
+    def process_csv_to_excel(self,directory, json_file, final_excel, output_excel_prefix='plots', batch_size=50):
+        self.setup_progressWindow()  # Gọi hàm khởi tạo thanh tiến trình
+        # Khai báo các thông số đầu vào từ tệp JSON
+        with open(json_file, 'r') as file:
+            data = json.load(file)
+    
+        data_columns = []
+        zoom_factors = []
+        bottom_limits = []
+        top_limits = []
+        size = [5.2, 3.1]
+
+        for item in data:
+            data_columns.append(item['column_name'])
+            top_limits.append(item['upper_limit'])
+            bottom_limits.append(item['lower_limit'])
+            zoom_factors.append(item['expan_number'])
+
+
+        number_data = len(data_columns)
+        colors = ['blue', 'green', 'red', 'orange', 'purple', 'brown', 'pink', 'gray',
+                'yellow', 'cyan', 'magenta', 'lime', 'teal', 'violet', 'gold', 'navy',
+                'maroon', 'olive', 'coral', 'indigo', 'turquoise', 'silver', 'black'] * 3
+
+        csv_files = sorted([f for f in os.listdir(directory) if f.endswith('.csv')])
+
+        if not csv_files:
+            #print("No CSV files found in the directory. Stopping the program.")
+            sys.exit()
+
+        # Các thông số định dạng thời gian
+        time_formatter = mdates.DateFormatter('%H:%M')
+        time_locator = mdates.MinuteLocator(interval=5)
+        excel_file_index = 1
+        processed_files = 0
+        
+        # Xử lý và xuất dữ liệu từ các tệp CSV
+        with lock:
+            while processed_files < len(csv_files):
+                  # Cập nhật giao diện
+                excel_file = f'{output_excel_prefix}_{excel_file_index}.xlsx'
+                
+                if os.path.exists(excel_file):
+                    wb = load_workbook(excel_file)
+                    ws = wb.active
+                    
+                    if ws.max_row > 1:
+                        for row in ws.iter_rows(min_row=2, max_row=ws.max_row):
+                            for cell in row:
+                                cell.value = None
+                        ws._images = []
+                    wb.save(excel_file)
+                else:
+                    wb = Workbook()
+                    ws = wb.active
+
+                batch = csv_files[processed_files:processed_files + batch_size]
+                current_row = 2
+
+                for csv_file in batch:
+                    #print(f"file : {processed_files}/{len(csv_files)}")
+                    file_path = os.path.join(directory, csv_file)
+                    columns_to_read = ['TIME'] + data_columns[:number_data]
+                    df = pd.read_csv(file_path, usecols=columns_to_read)
+                    df['TIME'] = pd.to_datetime(df['TIME'], format='%H:%M:%S', errors='coerce')
+
+                    for i in range(number_data):
+                        column_name = data_columns[i]
+                        zoom_factor = zoom_factors[i]
+                        df[column_name] = pd.to_numeric(df[column_name], errors='coerce').fillna(0) * zoom_factor
+                        
+                        invalid_data = df[df[column_name].isna()]
+                        if not invalid_data.empty:
+                            raise ValueError(f"Non-numeric data in '{column_name}'. Exiting program.")
+
+                        fig, ax1 = plt.subplots(figsize=size)
+                        sns.lineplot(data=df, x='TIME', y=column_name, ax=ax1, color=colors[i], label=column_name)
+                        ax1.xaxis.set_major_formatter(time_formatter)
+                        ax1.set_xlim(df['TIME'].min(), df['TIME'].max())
+                        ax1.xaxis.set_major_locator(time_locator)
+                        plt.xticks(rotation=90)
+                        plt.subplots_adjust(bottom=0.3)  # Thêm khoảng cách dưới
+                        ax1.set_ylim(bottom_limits[i], top_limits[i])
+                        ax1.set_ylabel('')
+                        fig.canvas.draw()
+                        image_array = np.array(fig.canvas.renderer.buffer_rgba())
+                        plt.close(fig)
+
+                        img_buffer = io.BytesIO()
+                        imageio.imwrite(img_buffer, image_array, format='png')
+                        img_buffer.seek(0)
+                        img_openpyxl = Image(img_buffer)
+                        col_letter = chr(ord('C') + i - 1)  # Tính toán ký tự cột (C = 3, D = 4, ...)
+                        ws.add_image(img_openpyxl, f'{col_letter}{current_row}')
+
+                    # Lấy timestamp từ tên tệp
+                    base_filename = csv_file.split('_')[1].replace('.csv', '')
+                    timestamp_str = base_filename[:8] + ' ' + base_filename[8:10] + ':' + base_filename[10:]
+                    formatted_timestamp = pd.to_datetime(timestamp_str, format='%Y%m%d %H:%M').strftime('%Y_%m_%d %H:%M')
+                    
+                    ws[f'A{current_row}'] = csv_file
+                    ws[f'B{current_row}'] = formatted_timestamp
+                    
+                    processed_files += 1
+                    current_row += 1
+                    self.progress['value'] = (processed_files / len(csv_files)) * 100  # Cập nhật thanh tiến trình
+                    self.progress_window.update_idletasks()
+
+                wb.save(excel_file)
+                wb.close()
+                gc.collect()
+                excel_file_index += 1
+        with lock:
+            # Ghi dữ liệu vào final_plots.xlsx
+            if os.path.exists(final_excel):
+                wb_final = load_workbook(final_excel)
+                ws_final = wb_final.active
+                
+                if ws_final.max_row > 1:
+                    for row in ws_final.iter_rows(min_row=1, max_row=ws_final.max_row):
+                        for cell in row:
+                            cell.value = None
+                            ws_final.row_dimensions[row[0].row].height = 15  # Reset row height
+                    ws_final._images = []
+                    for col in range(1, ws_final.max_column + 1):
+                        ws_final.column_dimensions[get_column_letter(col)].width = 10
+                    headers = ['file.csv', 'Timestamp'] + [f'Chart {i + 1}' for i in range(number_data)]
+                    header_cells = [f'{chr(65 + i)}1' for i in range(len(headers))]
+                    
+                    for i, cell in enumerate(header_cells):
+                        ws_final[cell] = headers[i]
+                        ws_final[cell].alignment = Alignment(horizontal='center', vertical='center')
+                    wb_final.save(final_excel)
+            else:
+                wb_final = Workbook()
+                ws_final = wb_final.active
+                ws_final.title = "All Data"
+                headers = ['file.csv', 'Timestamp'] + [f'Chart {i + 1}' for i in range(number_data)]
+                ws_final.append(headers)
+                header_cells = [f'{get_column_letter(i + 1)}1' for i in range(len(headers))]
+                
+                for cell in header_cells:
+                    ws_final[cell].alignment = Alignment(horizontal='center', vertical='center')
+
+        current_row = 2
+        with lock:
+            for i in range(1, excel_file_index):
+                temp_file = f'{output_excel_prefix}_{i}.xlsx'
+                wb_temp = load_workbook(temp_file)
+                ws_temp = wb_temp.active
+                
+                for row in range(2, ws_temp.max_row + 1):
+                    ws_final[f'A{current_row}'] = ws_temp[f'A{row}'].value
+                    ws_final[f'B{current_row}'] = ws_temp[f'B{row}'].value
+                    ws_final[f'A{current_row}'].alignment = Alignment(horizontal='center', vertical='center')
+                    ws_final[f'B{current_row}'].alignment = Alignment(horizontal='center', vertical='center')
+
+                    img_counter = 0
+                    
+                    for img in ws_temp._images:
+                        if isinstance(img.anchor, str):
+                            img_row = int(re.findall(r'\d+', img.anchor)[0])
+                        elif hasattr(img.anchor, '_from'):
+                            img_row = img.anchor._from.row + 1
+                        else:
+                            raise TypeError(f"Unexpected anchor type: {type(img.anchor)}")
+                        
+                        if img_row == row:
+                            if img_counter < number_data:
+                                col_letter = get_column_letter(3 + img_counter)  # Bắt đầu từ cột C (3)
+                                ws_final.add_image(img, f'{col_letter}{current_row}')
+                            img_counter += 1
+                    
+                    if img_counter > 0:
+                        img_height = img.height * 0.75  # Điều chỉnh kích thước ảnh
+                        ws_final.row_dimensions[current_row].height = img_height + 20
+                    
+                    current_row += 1
+
+                for col in ['A', 'B']:
+                    lengths = [len(str(ws_temp[f'{col}{r}'].value)) for r in range(2, ws_temp.max_row + 1) if ws_temp[f'{col}{r}'].value]
+                    if lengths:
+                        max_length = max(lengths)
+                        ws_final.column_dimensions[col].width = max(ws_final.column_dimensions[col].width, max_length + 2)
+                
+                for img in ws_temp._images:
+                    img_width = img.width / 7.0  # Điều chỉnh kích thước
+                    for col_idx in range(3, 3 + number_data):  # Các cột chứa ảnh (C, D, E,...)
+                        col_letter = get_column_letter(col_idx)
+                        ws_final.column_dimensions[col_letter].width = max(ws_final.column_dimensions[col_letter].width, img_width)
+
+        wb_final.save(final_excel)
+    
+        messagebox.showinfo("Finish", f"Excel file saved at {final_excel}.!")
+        for i in range(1, excel_file_index):
+            temp_file = f'plots_{i}.xlsx'
+            if os.path.exists(temp_file):
+                os.remove(temp_file)
+                #print(f"Đã xóa {temp_file}")
+        self.finish_processing()
+
+
+    def setup_progressWindow(self):
+            # Tạo cửa sổ thanh tiến trình
+            self.progress_window = tk.Toplevel()
+            self.progress_window.title("Processing...")
+            self.progress_window.geometry("300x100")
+
+            self.progress_label = tk.Label(self.progress_window, text="Processing files...")
+            self.progress_label.pack(pady=10)
+
+            self.progress = ttk.Progressbar(self.progress_window, orient="horizontal", length=250, mode="determinate")
+            self.progress.pack(pady=10)
+        
+    def update_progress(self, value):
+        self.progress['value'] = value
+        self.progress_window.update_idletasks()  # Cập nhật giao diện
+
+    def finish_processing(self):
+        """Đóng cửa sổ thanh tiến trình."""
+        self.progress_window.destroy()
