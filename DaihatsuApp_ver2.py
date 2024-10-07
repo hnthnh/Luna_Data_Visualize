@@ -582,7 +582,7 @@ class DaihatsuApp_ver2(tk.Tk):
         number_data = len(data_columns)
         colors = ['blue', 'green', 'red', 'orange', 'purple', 'brown', 'pink', 'gray',
                 'yellow', 'cyan', 'magenta', 'lime', 'teal', 'violet', 'gold', 'navy',
-                'maroon', 'olive', 'coral', 'indigo', 'turquoise', 'silver', 'black'] * 3
+                'maroon', 'olive', 'coral', 'indigo', 'turquoise', 'silver', 'black'] 
 
         csv_files = sorted([f for f in os.listdir(directory) if f.endswith('.csv')])
 
@@ -757,14 +757,13 @@ class DaihatsuApp_ver2(tk.Tk):
                         col_letter = get_column_letter(col_idx)
                         ws_final.column_dimensions[col_letter].width = max(ws_final.column_dimensions[col_letter].width, img_width)
 
+                temp_file = f'plots_{i}.xlsx'
+                if os.path.exists(temp_file):
+                    os.remove(temp_file)
         wb_final.save(final_excel)
     
         messagebox.showinfo("Finish", f"Excel file saved at {final_excel}.!")
-        for i in range(1, excel_file_index):
-            temp_file = f'plots_{i}.xlsx'
-            if os.path.exists(temp_file):
-                os.remove(temp_file)
-                #print(f"Đã xóa {temp_file}")
+
         self.finish_processing()
 
 
