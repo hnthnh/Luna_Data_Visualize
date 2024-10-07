@@ -24,7 +24,7 @@ from PIL import Image as PILimg
 from PIL import ImageTk as PILImageTk
 from openpyxl import Workbook, load_workbook
 from openpyxl.drawing.image import Image
-from openpyxl.styles import Alignment,PatternFill
+from openpyxl.styles import Alignment,PatternFill,Font
 from openpyxl.utils import get_column_letter
 from tkinter import ttk, filedialog, messagebox
 from language import translations
@@ -572,7 +572,6 @@ class DaihatsuApp_ver2(tk.Tk):
         bottom_limits = []
         top_limits = []
         size = [5.2, 3.1]
-
         for item in data:
             data_columns.append(item['column_name'])
             top_limits.append(item['upper_limit'])
@@ -596,7 +595,7 @@ class DaihatsuApp_ver2(tk.Tk):
         time_locator = mdates.MinuteLocator(interval=5)
         excel_file_index = 1
         processed_files = 0
-        
+        j = 0 
         # Xử lý và xuất dữ liệu từ các tệp CSV
         with lock:
             while processed_files < len(csv_files):
@@ -628,6 +627,7 @@ class DaihatsuApp_ver2(tk.Tk):
                     df['TIME'] = pd.to_datetime(df['TIME'], format='%H:%M:%S', errors='coerce')
 
                     for i in range(number_data):
+                        j = j + 1
                         column_name = data_columns[i]
                         zoom_factor = zoom_factors[i]
                         df[column_name] = pd.to_numeric(df[column_name], errors='coerce').fillna(0) * zoom_factor
@@ -635,9 +635,10 @@ class DaihatsuApp_ver2(tk.Tk):
                         invalid_data = df[df[column_name].isna()]
                         if not invalid_data.empty:
                             raise ValueError(f"Non-numeric data in '{column_name}'. Exiting program.")
-
+                        if j > len(colors):
+                            j = 1
                         fig, ax1 = plt.subplots(figsize=size)
-                        sns.lineplot(data=df, x='TIME', y=column_name, ax=ax1, color=colors[i], label=column_name)
+                        sns.lineplot(data=df, x='TIME', y=column_name, ax=ax1, color=colors[j], label=column_name)
                         ax1.xaxis.set_major_formatter(time_formatter)
                         ax1.set_xlim(df['TIME'].min(), df['TIME'].max())
                         ax1.xaxis.set_major_locator(time_locator)
@@ -693,6 +694,7 @@ class DaihatsuApp_ver2(tk.Tk):
                     for i, cell in enumerate(header_cells):
                         ws_final[cell] = headers[i]
                         ws_final[cell].alignment = Alignment(horizontal='center', vertical='center')
+                        ws_final[cell].font = Font(bold=True)  # Apply bold font
                         ws_final[cell].fill = PatternFill(start_color='FFFF00', end_color='FFFF00', fill_type='solid')# Apply yellow color
                     wb_final.save(final_excel)
             else:
@@ -705,6 +707,7 @@ class DaihatsuApp_ver2(tk.Tk):
                 
                 for cell in header_cells:
                     ws_final[cell].alignment = Alignment(horizontal='center', vertical='center')
+                    ws_final[cell].font = Font(bold=True)  # Apply bold font
                     ws_final[cell].fill = PatternFill(start_color='FFFF00', end_color='FFFF00', fill_type='solid')# Apply yellow color
 
         current_row = 2
