@@ -5,7 +5,3 @@ seaborn
 imageio
 Pillow
 openpyxl
-
-
-
-ko[kokoko
