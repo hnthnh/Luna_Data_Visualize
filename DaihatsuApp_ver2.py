@@ -24,7 +24,7 @@ from PIL import Image as PILimg
 from PIL import ImageTk as PILImageTk
 from openpyxl import Workbook, load_workbook
 from openpyxl.drawing.image import Image
-from openpyxl.styles import Alignment
+from openpyxl.styles import Alignment,PatternFill
 from openpyxl.utils import get_column_letter
 from tkinter import ttk, filedialog, messagebox
 from language import translations
@@ -554,12 +554,13 @@ class DaihatsuApp_ver2(tk.Tk):
             new_expan_value = self.Expan_Number_var.get()
             self.tree3.item(selected_item, values=(current_values[0], new_expan_value))
     def validate_number(self, value):
-            """Kiểm tra xem giá trị có phải là số hợp lệ hay không."""
-            if value == "" or value.isdigit() or (value[0] == '-' and value[1:].isdigit()):
-                return True
-            else:
-                messagebox.showerror("Invalid input", "Please enter a valid number.")
-                return False
+        """Kiểm tra xem giá trị có phải là số hợp lệ hay không (bao gồm cả float)."""
+        try:
+            float(value)  # Kiểm tra nếu giá trị có thể chuyển thành số float
+            return True
+        except ValueError:
+            messagebox.showerror("Invalid input", "Please enter a valid number.")
+            return False
     def process_csv_to_excel(self,directory, json_file, final_excel, output_excel_prefix='plots', batch_size=50):
         self.setup_progressWindow()  # Gọi hàm khởi tạo thanh tiến trình
         # Khai báo các thông số đầu vào từ tệp JSON
@@ -692,6 +693,7 @@ class DaihatsuApp_ver2(tk.Tk):
                     for i, cell in enumerate(header_cells):
                         ws_final[cell] = headers[i]
                         ws_final[cell].alignment = Alignment(horizontal='center', vertical='center')
+                        ws_final[cell].fill = PatternFill(start_color='FFFF00', end_color='FFFF00', fill_type='solid')# Apply yellow color
                     wb_final.save(final_excel)
             else:
                 wb_final = Workbook()
@@ -703,6 +705,7 @@ class DaihatsuApp_ver2(tk.Tk):
                 
                 for cell in header_cells:
                     ws_final[cell].alignment = Alignment(horizontal='center', vertical='center')
+                    ws_final[cell].fill = PatternFill(start_color='FFFF00', end_color='FFFF00', fill_type='solid')# Apply yellow color
 
         current_row = 2
         with lock:
