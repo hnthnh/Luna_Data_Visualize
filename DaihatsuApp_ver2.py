@@ -580,9 +580,9 @@ class DaihatsuApp_ver2(tk.Tk):
 
 
         number_data = len(data_columns)
-        colors = ['blue', 'green', 'red', 'orange', 'purple', 'brown', 'pink', 'gray',
-                'yellow', 'cyan', 'magenta', 'lime', 'teal', 'violet', 'gold', 'navy',
-                'maroon', 'olive', 'coral', 'indigo', 'turquoise', 'silver', 'black'] 
+        colors = ['blue', 'green', 'red','black', 'orange', 'purple', 'brown', 'black', 'pink', 'cyan', 'magenta', 
+          'teal', 'violet', 'gold', 'navy', 'maroon', 'olive', 'coral', 'indigo', 'turquoise', 
+          'black']
 
         csv_files = sorted([f for f in os.listdir(directory) if f.endswith('.csv')])
 
@@ -595,7 +595,6 @@ class DaihatsuApp_ver2(tk.Tk):
         time_locator = mdates.MinuteLocator(interval=5)
         excel_file_index = 1
         processed_files = 0
-        j = 0 
         # Xử lý và xuất dữ liệu từ các tệp CSV
         with lock:
             while processed_files < len(csv_files):
@@ -625,7 +624,7 @@ class DaihatsuApp_ver2(tk.Tk):
                     columns_to_read = ['TIME'] + data_columns[:number_data]
                     df = pd.read_csv(file_path, usecols=columns_to_read)
                     df['TIME'] = pd.to_datetime(df['TIME'], format='%H:%M:%S', errors='coerce')
-
+                    j = 0 
                     for i in range(number_data):
                         j = j + 1
                         column_name = data_columns[i]
