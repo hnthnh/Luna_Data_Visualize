@@ -1,0 +1,8 @@
+<RCC>
+  <qresource prefix="image">
+    <file>globe.svg</file>
+    <file>h_logo (1).ico</file>
+    <file>search.svg</file>
+    <file>img_daihatsu_logo.png</file>
+  </qresource>
+</RCC>

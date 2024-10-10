@@ -26,12 +26,11 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>DAIHATSU DIESEL MFG.CO.,LTD</string>
+   <string>       DAIHATSU DIESEL MFG.CO.,LTD        -       Version 1.0.0</string>
   </property>
   <property name="windowIcon">
-   <iconset>
-    <normalon>C:/Users/USER/Downloads/image_2024_10_09T06_33_11_459Z.png</normalon>
-   </iconset>
+   <iconset resource="D:/Truong_Ngoc_Phu/task_1/ket_qua/app_giaodien/image.qrc">
+    <normaloff>:/image/h_logo (1).ico</normaloff>:/image/h_logo (1).ico</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QTextBrowser" name="text_browsefolder">
@@ -65,10 +64,15 @@
      </font>
     </property>
     <property name="styleSheet">
-     <string notr="true"> background-color: #7EC0EE;
+     <string notr="true">QPushButton { 
+background-color: #7EC0EE;
     color: black;
     border-radius: 10px;
-    border: 3px solid #FFFFFF;</string>
+    border: 3px solid #FFFFFF;
+}
+QPushButton:hover {
+    background-color: #6CA6CD; /* Màu khi chuột di chuyển tới */
+}</string>
     </property>
     <property name="text">
      <string>Delete</string>
@@ -107,14 +111,20 @@
     background-color: white; /* Màu nền */
     padding: 5px; /* Khoảng cách bên trong */</string>
     </property>
+    <property name="verticalScrollBarPolicy">
+     <enum>Qt::ScrollBarAlwaysOff</enum>
+    </property>
+    <property name="horizontalScrollBarPolicy">
+     <enum>Qt::ScrollBarAlwaysOff</enum>
+    </property>
    </widget>
    <widget class="QProgressBar" name="progressBar">
     <property name="geometry">
      <rect>
       <x>60</x>
-      <y>638</y>
+      <y>641</y>
       <width>871</width>
-      <height>23</height>
+      <height>20</height>
      </rect>
     </property>
     <property name="font">
@@ -132,19 +142,19 @@
 }
 
 QProgressBar::chunk {
-    background-color: #7EC0EE;  /* Màu xanh của thanh tiến trình */
+    background-color: #008B8B;  /* Màu xanh của thanh tiến trình */
     border-radius: 8px;  /* Bo góc cho thanh tiến trình */
 }</string>
     </property>
     <property name="value">
-     <number>50</number>
+     <number>0</number>
     </property>
    </widget>
    <widget class="QPushButton" name="btn_start">
     <property name="geometry">
      <rect>
       <x>760</x>
-      <y>670</y>
+      <y>680</y>
       <width>171</width>
       <height>51</height>
      </rect>
@@ -160,10 +170,15 @@ QProgressBar::chunk {
      <bool>false</bool>
     </property>
     <property name="styleSheet">
-     <string notr="true"> background-color:#e67e22;
-    color:black;
+     <string notr="true">QPushButton { 
+background-color: #7EC0EE;
+    color: black;
     border-radius: 10px;
-    border: 5px solid #FFFFFF;</string>
+    border: 3px solid #FFFFFF;
+}
+QPushButton:hover {
+    background-color: #6CA6CD; /* Màu khi chuột di chuyển tới */
+}</string>
     </property>
     <property name="text">
      <string>START</string>
@@ -172,11 +187,16 @@ QProgressBar::chunk {
    <widget class="QComboBox" name="comboBox_language">
     <property name="geometry">
      <rect>
-      <x>60</x>
+      <x>80</x>
       <y>700</y>
-      <width>151</width>
+      <width>111</width>
       <height>31</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>13</pointsize>
+     </font>
     </property>
     <property name="styleSheet">
      <string notr="true">
@@ -184,13 +204,23 @@ QProgressBar::chunk {
     background-color: white; /* Màu nền */
     padding: 5px; /* Khoảng cách bên trong */</string>
     </property>
+    <item>
+     <property name="text">
+      <string>English</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>Japanese</string>
+     </property>
+    </item>
    </widget>
    <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
-      <x>370</x>
+      <x>410</x>
       <y>20</y>
-      <width>281</width>
+      <width>171</width>
       <height>41</height>
      </rect>
     </property>
@@ -198,7 +228,7 @@ QProgressBar::chunk {
      <string/>
     </property>
     <property name="pixmap">
-     <pixmap>C:/Users/USER/Downloads/img_daihatsu_logo.png</pixmap>
+     <pixmap resource="D:/Truong_Ngoc_Phu/task_1/ket_qua/app_giaodien/image.qrc">:/image/img_daihatsu_logo.png</pixmap>
     </property>
     <property name="scaledContents">
      <bool>true</bool>
@@ -219,36 +249,18 @@ QProgressBar::chunk {
      </font>
     </property>
     <property name="styleSheet">
-     <string notr="true"> background-color: #7EC0EE;
+     <string notr="true">QPushButton { 
+background-color: #7EC0EE;
     color: black;
     border-radius: 10px;
-    border: 3px solid #FFFFFF;</string>
+    border: 3px solid #FFFFFF;
+}
+QPushButton:hover {
+    background-color: #6CA6CD; /* Màu khi chuột di chuyển tới */
+}</string>
     </property>
     <property name="text">
      <string>Add</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_graphitems_2">
-    <property name="geometry">
-     <rect>
-      <x>900</x>
-      <y>40</y>
-      <width>141</width>
-      <height>121</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <pointsize>15</pointsize>
-      <weight>75</weight>
-      <bold>true</bold>
-     </font>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-    <property name="pixmap">
-     <pixmap>C:/Users/USER/Downloads/search.svg</pixmap>
     </property>
    </widget>
    <widget class="QPushButton" name="btn_browsefolder">
@@ -266,10 +278,15 @@ QProgressBar::chunk {
      </font>
     </property>
     <property name="styleSheet">
-     <string notr="true"> background-color: #7EC0EE;
+     <string notr="true">QPushButton { 
+background-color: #7EC0EE;
     color: black;
     border-radius: 10px;
-    border: 3px solid #FFFFFF;</string>
+    border: 3px solid #FFFFFF;
+}
+QPushButton:hover {
+    background-color: #6CA6CD; /* Màu khi chuột di chuyển tới */
+}</string>
     </property>
     <property name="text">
      <string>Browse Folder</string>
@@ -294,30 +311,6 @@ QProgressBar::chunk {
      <bool>true</bool>
     </property>
    </widget>
-   <widget class="QLabel" name="label_graphitems_3">
-    <property name="enabled">
-     <bool>false</bool>
-    </property>
-    <property name="geometry">
-     <rect>
-      <x>80</x>
-      <y>700</y>
-      <width>121</width>
-      <height>31</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <pointsize>13</pointsize>
-     </font>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-    <property name="pixmap">
-     <pixmap>C:/Users/USER/Downloads/globe.svg</pixmap>
-    </property>
-   </widget>
    <widget class="QTableWidget" name="table_data">
     <property name="geometry">
      <rect>
@@ -327,12 +320,29 @@ QProgressBar::chunk {
       <height>251</height>
      </rect>
     </property>
+    <property name="styleSheet">
+     <string notr="true">
+    border: 1px solid #ccc; /* Đường viền màu xám nhạt */
+</string>
+    </property>
+    <property name="horizontalScrollBarPolicy">
+     <enum>Qt::ScrollBarAlwaysOff</enum>
+    </property>
+    <property name="alternatingRowColors">
+     <bool>true</bool>
+    </property>
     <property name="gridStyle">
      <enum>Qt::DotLine</enum>
+    </property>
+    <property name="cornerButtonEnabled">
+     <bool>true</bool>
     </property>
     <property name="columnCount">
      <number>4</number>
     </property>
+    <attribute name="verticalHeaderStretchLastSection">
+     <bool>false</bool>
+    </attribute>
     <column>
      <property name="text">
       <string>NAME</string>
@@ -354,9 +364,53 @@ QProgressBar::chunk {
      </property>
     </column>
    </widget>
+   <widget class="QLabel" name="label_graphitems_3">
+    <property name="geometry">
+     <rect>
+      <x>60</x>
+      <y>700</y>
+      <width>31</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>13</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="pixmap">
+     <pixmap resource="D:/Truong_Ngoc_Phu/task_1/ket_qua/app_giaodien/image.qrc">:/image/globe.svg</pixmap>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_graphitems_2">
+    <property name="geometry">
+     <rect>
+      <x>900</x>
+      <y>90</y>
+      <width>111</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>13</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="pixmap">
+     <pixmap resource="D:/Truong_Ngoc_Phu/task_1/ket_qua/app_giaodien/image.qrc">:/image/search.svg</pixmap>
+    </property>
+   </widget>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
- <resources/>
+ <resources>
+  <include location="D:/Truong_Ngoc_Phu/task_1/ket_qua/app_giaodien/image.qrc"/>
+ </resources>
  <connections/>
 </ui>
