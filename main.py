@@ -9,7 +9,8 @@ class MainWindow(QMainWindow):
         super().__init__()
         # Tải giao diện từ file .ui
         uic.loadUi('assets/giaodien.ui', self)
-            # Ngắt kết nối nếu có
+        
+        self.set_screen()
         self.btn_browsefolder.clicked.disconnect()
         self.btn_add.clicked.disconnect()
         self.btn_delete.clicked.disconnect()
@@ -21,7 +22,15 @@ class MainWindow(QMainWindow):
         self.btn_start.clicked.connect(self.on_btn_start_clicked)
 
         print("Kết nối tín hiệu thành công.")
+    def set_screen(self):
+        screen = QApplication.primaryScreen()
+        screen_size = screen.size()
 
+        # Tính toán kích thước 70% của màn hình
+        new_width = int(screen_size.width() * 0.625)
+        new_height = int(screen_size.height() * 0.9)
+        # Đặt kích thước cố định 70% màn hình
+        self.setFixedSize(new_width, new_height)
     def on_btn_browsefolder_clicked(self):
         # Mở hộp thoại để chọn thư mục
         folder_path = QFileDialog.getExistingDirectory(self, "Chọn thư mục")
@@ -43,9 +52,6 @@ class MainWindow(QMainWindow):
             else:
                 # Hiển thị thông báo lỗi nếu không có file CSV nào
                 QMessageBox.critical(self, "Lỗi", "Thư mục không chứa file CSV nào!")
-                
-        
-
     def on_btn_add_clicked(self):
         # Lấy giá trị đã chọn từ combobox
         selected_name = self.comboBox_graphitems.currentText()
@@ -70,7 +76,6 @@ class MainWindow(QMainWindow):
             self.table_data.setItem(row_position, 3, QTableWidgetItem(str(expan_number)))  # Cột EXPAN NUMBER
         else:
             QMessageBox.warning(self, "Cảnh báo", "Vui lòng chọn một tên trước khi thêm.")
-
     def on_btn_delete_clicked(self):
         # Ngắt kết nối trước khi thực hiện hành động xóa
         self.btn_delete.clicked.disconnect()
@@ -85,10 +90,41 @@ class MainWindow(QMainWindow):
 
         # Kết nối lại nút Delete
         self.btn_delete.clicked.connect(self.on_btn_delete_clicked)
-
     def on_btn_start_clicked(self):
-        print("btn_start clicked")  # In ra console
-        QMessageBox.information(self, "Thông báo", "Nút btn_start đã được nhấn!")
+    # Lấy dữ liệu từ bảng
+        table_data = self.get_table_data()
+
+        # Xóa sạch dữ liệu trong QListWidget trước khi thêm mới
+        self.list_process.clear()
+
+        # Duyệt qua dữ liệu của bảng và thêm từng hàng vào QListWidget
+        for row_data in table_data:
+            # Chuyển đổi dữ liệu hàng thành chuỗi để hiển thị trong QListWidget
+            row_text = ', '.join(row_data)
+            self.list_process.addItem(row_text)
+    def get_table_data(self):
+        # Tạo danh sách để lưu dữ liệu từ table
+        table_data = []
+
+        # Duyệt qua từng hàng trong QTableWidget
+        row_count = self.table_data.rowCount()
+        column_count = self.table_data.columnCount()
+
+        for row in range(row_count):
+            row_data = []
+            for column in range(column_count):
+                # Lấy dữ liệu từ mỗi ô trong hàng
+                item = self.table_data.item(row, column)
+                if item is not None:
+                    row_data.append(item.text())  # Lưu giá trị text của ô vào danh sách
+                else:
+                    row_data.append('')  # Nếu ô trống, thêm chuỗi rỗng
+
+            # Thêm dữ liệu hàng này vào table_data
+            table_data.append(row_data)
+
+        return table_data
+
     def filter_combobox(self, text):
         # Lọc các mục trong combobox dựa trên văn bản tìm kiếm
         for index in range(self.comboBox_graphitems.count()):
