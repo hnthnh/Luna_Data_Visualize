@@ -5,14 +5,16 @@ import io
 import re
 import gc
 import pandas as pd
-from PyQt6 import uic,QtWidgets
+from PyQt6 import uic
 from PyQt6.QtWidgets import QApplication, QMainWindow, QMessageBox, QFileDialog,QTableWidgetItem
-
+from PyQt6.QtCore import QUrl,Qt
+from PyQt6.QtGui import QDesktopServices,QPixmap,QIcon
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import seaborn as sns
+import glob
 import threading
 from PIL import Image as PILimg
 from PIL import ImageTk as PILImageTk
@@ -27,10 +29,16 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         # Tải giao diện từ file .ui
-        uic.loadUi('assets/giaodien.ui', self)
+        ui_file_path=self.resource_path("assets/giaodien.ui")
+        uic.loadUi(ui_file_path , self)
         
         self.set_screen()
-        self.current_language = "Japanese"  # Default language
+        self.clear_excel_files()
+        
+        icon_file_path=self.resource_path("assets\img_daihatsu_logo.ico")
+        self.setWindowIcon(QIcon(icon_file_path))
+        self.center()
+        self.current_language = "English"  # Default language
         self.setup_comboboxLanguage()
         self.resize_columns_to_fit()
         self.btn_browsefolder.clicked.disconnect()
@@ -42,6 +50,43 @@ class MainWindow(QMainWindow):
         self.btn_add.clicked.connect(self.on_btn_add_clicked)
         self.btn_delete.clicked.connect(self.on_btn_delete_clicked)
         self.btn_start.clicked.connect(self.on_btn_start_clicked)
+    def clear_excel_files(self):
+        # Đường dẫn tới thư mục gốc
+        root_directory = os.getcwd()  # Hoặc sử dụng đường dẫn cụ thể nếu cần
+
+        # Tìm tất cả các file có dạng plots_{i}.xlsx
+        excel_files = glob.glob(os.path.join(root_directory, "plots_*.xlsx"))
+
+        # Xóa từng file tìm được
+        for file in excel_files:
+            try:
+                os.remove(file)
+            except Exception as e:
+                pass
+    def resource_path(self,relative_path):
+        """Get absolute path to resource, works for dev and for PyInstaller."""
+        try:
+            base_path = sys._MEIPASS
+        except Exception:
+            base_path = os.path.abspath(".")
+
+        return os.path.join(base_path, relative_path)
+
+    def center(self):
+        # Get the size of the main window
+        size = self.size()  # Size of the main window
+
+        # Get the screen where the application is running
+        screen = QApplication.primaryScreen()
+        screen_size = screen.size()  # Get the screen size
+    
+        # Calculate the x and y coordinates to center the window
+        x = (screen_size.width() - size.width()) // 2
+        y =0
+        #y = (screen_size.height() - size.height()) // 2
+
+        # Move the window to the calculated position
+        self.move(x, y)
 
     def setup_comboboxLanguage(self):
         self.comboBox_language.currentIndexChanged.connect(self.change_language_from_combobox)
@@ -64,11 +109,29 @@ class MainWindow(QMainWindow):
         screen = QApplication.primaryScreen()
         screen_size = screen.size()
 
+        logo_path=self.resource_path("assets/img_daihatsu_logo.png")
+        pixmap = QPixmap(logo_path)  # Đường dẫn tới hình ảnh của bạn
+        self.label.setPixmap(pixmap)
+
+        search_path=self.resource_path("assets/search.png")
+        pixmap = QPixmap(search_path)  # Đường dẫn tới hình ảnh của bạn
+        scaled_pixmap = pixmap.scaled(self.label_search.size(), 
+                               aspectRatioMode=Qt.AspectRatioMode.KeepAspectRatio, 
+                               transformMode=Qt.TransformationMode.SmoothTransformation)
+        self.label_search.setPixmap(scaled_pixmap)
+
+        globe_path=self.resource_path("assets\goble.png")
+        pixmap = QPixmap(globe_path)  # Đường dẫn tới hình ảnh của bạn
+        scaled_pixmap = pixmap.scaled(self.label_goble.size(), 
+                                aspectRatioMode=Qt.AspectRatioMode.KeepAspectRatio, 
+                                transformMode=Qt.TransformationMode.SmoothTransformation)
+        self.label_goble.setPixmap(scaled_pixmap)
         # Tính toán kích thước 70% của màn hình
         new_width = int(screen_size.width() * 0.625)
         new_height = int(screen_size.height() * 0.9)
         # Đặt kích thước cố định 70% màn hình
         self.setFixedSize(new_width, new_height)
+
     def on_btn_browsefolder_clicked(self):
         # Mở hộp thoại để chọn thư mục
         folder_path = QFileDialog.getExistingDirectory(self, "Chọn thư mục")
@@ -84,14 +147,17 @@ class MainWindow(QMainWindow):
                 # Đọc file CSV đầu tiên
                 first_csv_file = os.path.join(folder_path, csv_files[0])
                 df = pd.read_csv(first_csv_file)
-
+                df.drop(columns=['TIME'], inplace=True)
                 # Lấy danh sách cột và thêm vào combobox
                 self.comboBox_graphitems.clear()  # Xóa các mục cũ
                 self.comboBox_graphitems.addItems(df.columns.tolist())  # Thêm danh sách cột vào combobox
-                QMessageBox.information(self, "Thông báo", f"Đã lấy {len(df.columns)} cột từ file: {first_csv_file}")
+                QMessageBox.information(self, translations[self.current_language]["msgbox_info_title"], 
+                        translations[self.current_language]["msgbox_columns_extracted"].format(len(df.columns), first_csv_file))
+
             else:
-                # Hiển thị thông báo lỗi nếu không có file CSV nào
-                QMessageBox.critical(self, "Lỗi", "Thư mục không chứa file CSV nào!")
+                # QMessageBox for CSV folder error
+                QMessageBox.critical(self, translations[self.current_language]["msgbox_error_title"], 
+                                    translations[self.current_language]["msgbox_no_csv_files"])
 
     def on_btn_add_clicked(self):
         # Lấy giá trị đã chọn từ combobox
@@ -109,19 +175,26 @@ class MainWindow(QMainWindow):
             # Thêm hàng vào bảng
             self.table_data.insertRow(row_position)
 
-            # Đặt giá trị cho từng cột
+            # Đặt giá trị cho từng cột  
             self.table_data.setItem(row_position, 0, QTableWidgetItem(selected_name))  # Cột NAME
             self.table_data.setItem(row_position, 1, QTableWidgetItem(str(upper_limit)))  # Cột UPPER LIMIT
             self.table_data.setItem(row_position, 2, QTableWidgetItem(str(lower_limit)))  # Cột LOWER LIMIT
             self.table_data.setItem(row_position, 3, QTableWidgetItem(str(expan_number)))  # Cột EXPAN NUMBER
-            
+
+            # Căn giữa nội dung của các ô
+            for column in range(4):  # Giả sử có 4 cột
+                item = self.table_data.item(row_position, column)
+                item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)  # Căn giữa
+
             # Fit columns to the overall width of the table
             self.resize_columns_to_fit()
 
         else:
-            QMessageBox.warning(self, "Cảnh báo", "Vui lòng chọn một tên trước khi thêm.")
+            QMessageBox.warning(self, translations[self.current_language]["msgbox_warning_title"], 
+                                translations[self.current_language]["msgbox_name_not_selected"])
+
     def resize_columns_to_fit(self):
-        self.table_data.horizontalHeader().setStyleSheet("QHeaderView::section { background-color: #7EC0EE; color: black; }")
+        self.table_data.horizontalHeader().setStyleSheet("QHeaderView::section { background-color: #B2DFEE; color: black; }")
         table_data = self.table_data  # Get the QTableWidget instance
         total_width = table_data.width()  # Get the total width of the table
         num_columns = table_data.columnCount()  # Get the number of columns
@@ -141,7 +214,9 @@ class MainWindow(QMainWindow):
         if current_row >= 0:  # Kiểm tra xem có hàng nào được chọn không
             self.table_data.removeRow(current_row)
         else:
-            QMessageBox.warning(self, "Cảnh báo", "Vui lòng chọn hàng để xóa.")
+            # QMessageBox for row delete warning
+            QMessageBox.warning(self, translations[self.current_language]["msgbox_warning_title"], 
+                                translations[self.current_language]["msgbox_row_delete_warning"])
 
         # Kết nối lại nút Delete
         self.btn_delete.clicked.connect(self.on_btn_delete_clicked)
@@ -161,7 +236,9 @@ class MainWindow(QMainWindow):
 
         # Kiểm tra xem directory có hợp lệ không
         if not os.path.exists(directory):
-            QMessageBox.warning(self, "Error", "The folder path is not valid.")
+            # QMessageBox for invalid folder path
+            QMessageBox.warning(self, translations[self.current_language]["msgbox_error_title"], 
+                                translations[self.current_language]["msgbox_invalid_folder"])
             return
 
         # Hỏi người dùng chọn nơi lưu file Excel đầu ra
@@ -174,9 +251,16 @@ class MainWindow(QMainWindow):
         # Gọi hàm process_csv_to_excel và truyền các tham số
         try:
             self.process_csv_to_excel(directory, final_excel)
-            QMessageBox.information(self, "Success", "Processing completed successfully!")
+            # QMessageBox for success
+            QMessageBox.information(self, translations[self.current_language]["msgbox_info_title"], 
+                                    translations[self.current_language]["msgbox_processing_success"])
+            QDesktopServices.openUrl(QUrl.fromLocalFile(final_excel))
+            self.clear_excel_files()
         except Exception as e:
-            QMessageBox.critical(self, "Error", f"An error occurred: {str(e)}")
+            # Handle exceptions with translations
+            QMessageBox.critical(self, translations[self.current_language]["msgbox_error_title"], 
+                                translations[self.current_language]["msgbox_general_error"].format(str(e)))
+            self.clear_excel_files()
        
     def get_table_data(self):
         # Tạo danh sách để lưu dữ liệu từ table
@@ -217,38 +301,45 @@ class MainWindow(QMainWindow):
                 # Kiểm tra nếu ô có giá trị
                 name_item = self.table_data.item(row, 0)  # Cột "Name"
                 if name_item is None or name_item.text() == '':
-                    QMessageBox.critical(self, "Error", f"Name is empty for row {row}.")
+                    # QMessageBox for empty row errors
+                    QMessageBox.critical(self, translations[self.current_language]["msgbox_error_title"], 
+                                        translations[self.current_language]["msgbox_empty_name_error"].format(row))
                     return
                 column_name = name_item.text()  # Lưu tên
 
                 # Kiểm tra và chuyển đổi Upper Limit
                 upper_limit_item = self.table_data.item(row, 1)  # Cột "Upper Limit"
                 if upper_limit_item is None or upper_limit_item.text() == '':
-                    QMessageBox.critical(self, "Error", f"Upper Limit is empty for row {row}.")
+                    QMessageBox.critical(self, translations[self.current_language]["msgbox_error_title"], 
+                                        translations[self.current_language]["msgbox_upper_limit_empty"].format(row))
                     return
                 upper_limit_str = upper_limit_item.text()
                 try:
                     upper_limit = int(float(upper_limit_str))  # Chuyển từ float sang int nếu cần
                 except ValueError:
-                    QMessageBox.critical(self, "Error", f"Invalid Upper Limit value: {upper_limit_str}")
+                    QMessageBox.critical(self, translations[self.current_language]["msgbox_error_title"], 
+                                        translations[self.current_language]["msgbox_invalid_upper_limit"].format(upper_limit_str))
                     return
 
                 # Kiểm tra và chuyển đổi Lower Limit
                 lower_limit_item = self.table_data.item(row, 2)  # Cột "Lower Limit"
                 if lower_limit_item is None or lower_limit_item.text() == '':
-                    QMessageBox.critical(self, "Error", f"Lower Limit is empty for row {row}.")
+                    QMessageBox.critical(self, translations[self.current_language]["msgbox_error_title"], 
+                                        translations[self.current_language]["msgbox_lower_limit_empty"].format(row))
                     return
                 lower_limit_str = lower_limit_item.text()
                 try:
                     lower_limit = int(float(lower_limit_str))
                 except ValueError:
-                    QMessageBox.critical(self, "Error", f"Invalid Lower Limit value: {lower_limit_str}")
+                    QMessageBox.critical(self, translations[self.current_language]["msgbox_error_title"], 
+                                        translations[self.current_language]["msgbox_invalid_lower_limit"].format(lower_limit_str))
                     return
 
                 # Chuyển Expan Number thành float
                 expan_number_item = self.table_data.item(row, 3)  # Cột "Expan Number"
                 if expan_number_item is None or expan_number_item.text() == '':
-                    QMessageBox.critical(self, "Error", f"Expan Number is empty for row {row}.")
+                    QMessageBox.critical(self, translations[self.current_language]["msgbox_error_title"], 
+                                        translations[self.current_language]["msgbox_expan_number_empty"].format(row))
                     return
 
                 expan_number_str = expan_number_item.text()
@@ -358,7 +449,7 @@ class MainWindow(QMainWindow):
                         processed_files += 1
                         current_row += 1
                                         # Cập nhật thanh tiến trình trong Qt6
-                        self.list_process.addItem(f"Processing {processed_files + 1}/{total_files}...")
+                        self.list_process.addItem(f"CSV Files are being processed on queue: {processed_files }/{total_files}")
                         self.list_process.scrollToBottom()
                         progress_value = int((processed_files / total_files) * 100)
                         self.progressBar.setValue(progress_value)
@@ -478,6 +569,8 @@ class MainWindow(QMainWindow):
         self.comboBox_graphitems.showPopup()    
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+    app.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
     window = MainWindow()
+    window.adjustSize()
     window.show()
     sys.exit(app.exec())

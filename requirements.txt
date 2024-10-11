@@ -5,3 +5,4 @@ seaborn
 imageio
 Pillow
 openpyxl
+PyQt6

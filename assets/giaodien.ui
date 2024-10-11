@@ -5,7 +5,7 @@
   <property name="enabled">
    <bool>true</bool>
   </property>
-  <property name="geometry">
+  <!-- <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
@@ -24,7 +24,7 @@
     <width>1000</width>
     <height>777</height>
    </size>
-  </property>
+  </property> -->
   <property name="windowTitle">
    <string>       DAIHATSU DIESEL MFG.CO.,LTD        -       Version 1.0.0</string>
   </property>
@@ -137,7 +137,6 @@ QPushButton:hover {
     border: 1px solid #ccc;  /* Đường viền */
     border-radius: 10px;  /* Bo tròn góc */
     text-align: center;  /* Hiển thị phần trăm bên ngoài */
-    padding-right: 15px;  /* Tạo khoảng trống để phần trăm hiện bên ngoài */
     background-color: #f3f3f3;  /* Màu nền thanh trống */
 }
 
@@ -187,7 +186,7 @@ QPushButton:hover {
    <widget class="QComboBox" name="comboBox_language">
     <property name="geometry">
      <rect>
-      <x>80</x>
+      <x>110</x>
       <y>700</y>
       <width>111</width>
       <height>31</height>
@@ -364,10 +363,10 @@ QPushButton:hover {
      </property>
     </column>
    </widget>
-   <widget class="QLabel" name="label_graphitems_3">
+   <widget class="QLabel" name="label_goble">
     <property name="geometry">
      <rect>
-      <x>60</x>
+      <x>70</x>
       <y>700</y>
       <width>31</width>
       <height>31</height>
@@ -385,12 +384,12 @@ QPushButton:hover {
      <pixmap resource="D:/Truong_Ngoc_Phu/task_1/ket_qua/app_giaodien/image.qrc">:/image/globe.svg</pixmap>
     </property>
    </widget>
-   <widget class="QLabel" name="label_graphitems_2">
+   <widget class="QLabel" name="label_search">
     <property name="geometry">
      <rect>
       <x>900</x>
       <y>90</y>
-      <width>111</width>
+      <width>21</width>
       <height>21</height>
      </rect>
     </property>
